@@ -47,7 +47,24 @@ composition（配線のみ）
 - 現状: `InstrumentBook` + `manage_instruments`
 - 将来: 日次判断ランナー用ポート（相場取得・エージェント CLI）を同様に切る
 
-ユースケースの単体テストは InMemory アダプタを使う。SQLite などインフラは永続化など少数の結合テストに留める。
+## Testing
+
+テスト名は仕様が読めること自体を優先する。関数名は日本語の「〜なとき〜になる」形にし、`pytest --collect-only` だけで振る舞いが分かるようにする。英語の識別子しか使えない場合は、同趣旨のコメントで補う。
+
+| 層 | 置き場 | 何を守るか |
+| --- | --- | --- |
+| ドメイン / ユースケース | `tests/` | ポート + InMemory。内部の具象実装には依存しない |
+| インフラ結合 | `tests/`（少数） | SQLite の永続化など、アダプタ固有の契約だけ |
+| HTTP（TestClient） | `tests/` | ルートとフォームの契約。UI 見た目には踏み込まない |
+| E2E（Playwright） | `e2e/` | ブラウザから見た利用者の振る舞い |
+
+**E2E の方針** — 実装詳細に左右されないブラックボックスにする。
+
+- セレクタは role / アクセシブル名（`aria-label` 等）だけを使う。CSS クラスやテンプレート構造には依存しない
+- テスト本体はアプリ内部モジュールを import しない（起動用フィクスチャのプロセス起動は例外）
+- 既定では一時 DB 付きでアプリを立てる。将来 FE/BE を分離したあとも、`BASE_URL` を差し替えれば同じスイートを流せる
+
+実行の切り分け: `uv run pytest` は `tests/` のみ。E2E は `uv run pytest e2e`（初回は `uv run playwright install chromium`）。
 
 ## Persistence
 
