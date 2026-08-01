@@ -28,3 +28,7 @@ class InMemoryJudgmentStore:
     def list_for(self, as_of: date) -> tuple[SuccessfulJudgment, ...]:
         items = [j for j in self._state.rows if j.as_of == as_of]
         return tuple(sorted(items, key=lambda j: j.ticker.value))
+
+    def list_as_of_dates(self) -> tuple[date, ...]:
+        dates = {j.as_of for j in self._state.rows}
+        return tuple(sorted(dates, reverse=True))

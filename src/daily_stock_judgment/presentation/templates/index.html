@@ -64,7 +64,8 @@
         margin-bottom: 1rem;
       }
       input[type="text"],
-      input[type="number"] {
+      input[type="number"],
+      select {
         border: 1px solid var(--line);
         border-radius: 8px;
         padding: 0.55rem 0.7rem;
@@ -123,7 +124,7 @@
   <body>
     <main>
       <h1>日次売買判断</h1>
-      <p class="lede">ウォッチリスト・保有の管理と、今日の判断一覧です。</p>
+      <p class="lede">ウォッチリスト・保有の管理と、判断一覧です。</p>
       {% if error %}
       <p class="error" role="alert">{{ error }}</p>
       {% endif %}
@@ -158,6 +159,51 @@
         </ul>
         {% else %}
         <p class="empty">まだ今日の判断はありません。</p>
+        {% endif %}
+      </section>
+
+      <section aria-labelledby="past-judgments-heading">
+        <h2 id="past-judgments-heading">過去の判断</h2>
+        {% if history_dates %}
+        <form
+          class="row"
+          method="get"
+          action="/"
+          aria-label="過去の判断日を選ぶ"
+        >
+          <label>
+            判断日
+            <select name="history_as_of" aria-label="過去の判断日">
+              <option value="">選択してください</option>
+              {% for day in history_dates %}
+              <option
+                value="{{ day.isoformat() }}"
+                {% if history_as_of == day.isoformat() %}selected{% endif %}
+              >
+                {{ day.isoformat() }}
+              </option>
+              {% endfor %}
+            </select>
+          </label>
+          <button type="submit">表示</button>
+        </form>
+        {% if history_rows %}
+        <ul aria-label="過去の判断結果">
+          {% for row in history_rows %}
+          <li class="judgment-row" aria-label="{{ row.aria_label }}">
+            <strong>{{ row.ticker }}</strong>
+            <span>{{ row.label }} · スコア {{ row.score }}</span>
+            <span class="meta">{{ row.reason }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% elif history_as_of %}
+        <p class="empty">この日の成功した判断はありません。</p>
+        {% else %}
+        <p class="empty">判断日を選ぶと一覧が表示されます。</p>
+        {% endif %}
+        {% else %}
+        <p class="empty">まだ過去の判断はありません。</p>
         {% endif %}
       </section>
 

@@ -17,6 +17,7 @@ from daily_stock_judgment.application.ports import (
     JudgmentModel,
     MarketDataSource,
 )
+from daily_stock_judgment.application.past_judgments import load_past_view
 from daily_stock_judgment.application.today_judgments import (
     DayRunStore,
     load_today_view,
@@ -66,6 +67,18 @@ def create_app(
             runs=runs,
             market=app.state.market,
         )
+        history_raw = request.query_params.get("history_as_of")
+        history_selected: date | None = None
+        if history_raw:
+            try:
+                history_selected = date.fromisoformat(history_raw)
+            except ValueError:
+                history_selected = None
+        past = load_past_view(
+            today=as_of,
+            selected=history_selected,
+            judgments=judgments,
+        )
         return TEMPLATES.TemplateResponse(
             request,
             "index.html",
@@ -76,6 +89,11 @@ def create_app(
                 "as_of": view.as_of.isoformat(),
                 "market_closed": view.market_closed,
                 "judgment_rows": view.rows,
+                "history_dates": past.available_dates,
+                "history_as_of": (
+                    past.selected.isoformat() if past.selected else None
+                ),
+                "history_rows": past.rows,
             },
         )
 

@@ -77,3 +77,14 @@ class SqliteJudgmentStore:
             )
             for row in rows
         )
+
+    def list_as_of_dates(self) -> tuple[date, ...]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT DISTINCT as_of
+                FROM judgments
+                ORDER BY as_of DESC
+                """
+            ).fetchall()
+        return tuple(date.fromisoformat(row["as_of"]) for row in rows)
