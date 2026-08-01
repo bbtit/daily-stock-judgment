@@ -44,6 +44,15 @@ uv run pytest e2e -q
 BASE_URL=http://127.0.0.1:8000 uv run pytest e2e -q
 ```
 
+### Lighthouse CI（ローカル）
+
+`/` の Performance を数回計測し、中央値レポートをディスクに残す。`:8000` でアプリが動いている場合は止めてから実行する。
+
+```bash
+pnpm dlx @lhci/cli autorun
+# レポート: .lighthouseci-reports/
+```
+
 ## アーキテクチャ
 
 実装方針（DDD / クリーンアーキテクチャ / イミュータブル）は [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を参照。

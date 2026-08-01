@@ -90,3 +90,7 @@ dist/
 build/
 *.db
 .env
+
+### Lighthouse CI (local) ###
+.lighthouseci/
+.lighthouseci-reports/
