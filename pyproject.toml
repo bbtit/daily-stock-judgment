@@ -10,25 +10,28 @@ dependencies = [
   "python-multipart>=0.0.12",
 ]
 
-[project.optional-dependencies]
+[project.scripts]
+daily-stock-judgment = "daily_stock_judgment.__main__:main"
+
+[dependency-groups]
 dev = [
   "pytest>=8.0.0",
   "httpx>=0.27.0",
 ]
 
-[project.scripts]
-daily-stock-judgment = "daily_stock_judgment.__main__:main"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/daily_stock_judgment"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/daily_stock_judgment/templates" = "daily_stock_judgment/templates"
+
+[tool.uv]
+default-groups = ["dev"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-
-[build-system]
-requires = ["setuptools>=68"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-data]
-daily_stock_judgment = ["templates/*.html"]

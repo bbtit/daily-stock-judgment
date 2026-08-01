@@ -1,20 +1,24 @@
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
+from urllib.parse import quote
 
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from urllib.parse import quote
 
 from daily_stock_judgment.registry import InstrumentRegistry
 
-DEFAULT_DB_PATH = Path(
-    os.environ.get(
-        "DSJ_DB_PATH",
-        Path.home() / ".local" / "share" / "daily-stock-judgment" / "app.db",
-    )
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+LEGACY_DB_PATH = (
+    Path.home() / ".local" / "share" / "daily-stock-judgment" / "app.db"
+)
+DEFAULT_DB_PATH = (
+    Path(os.environ["DSJ_DB_PATH"])
+    if "DSJ_DB_PATH" in os.environ
+    else PROJECT_ROOT / "data" / "app.db"
 )
 
 TEMPLATES = Jinja2Templates(
@@ -22,8 +26,22 @@ TEMPLATES = Jinja2Templates(
 )
 
 
+def _prepare_db_path(db_path: Path) -> Path:
+    """Prefer project-local DB; migrate once from the legacy home path."""
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    if (
+        db_path == DEFAULT_DB_PATH
+        and "DSJ_DB_PATH" not in os.environ
+        and not db_path.exists()
+        and LEGACY_DB_PATH.exists()
+    ):
+        shutil.move(str(LEGACY_DB_PATH), str(db_path))
+    return db_path
+
+
 def create_app(db_path: Path | None = None) -> FastAPI:
-    registry = InstrumentRegistry(db_path or DEFAULT_DB_PATH)
+    resolved = _prepare_db_path(db_path or DEFAULT_DB_PATH)
+    registry = InstrumentRegistry(resolved)
     app = FastAPI(title="日次売買判断")
     app.state.registry = registry
 
