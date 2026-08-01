@@ -43,6 +43,7 @@ def app_url(tmp_path: Path) -> Iterator[str]:
         # Fixed day + demo market so E2E stays offline and deterministic.
         "DSJ_AS_OF": "2026-07-31",
         "DSJ_MARKET": "demo",
+        "DSJ_JUDGMENT_MODEL": "demo",
         "PYTHONPATH": os.pathsep.join(
             [str(SRC), *(p for p in os.environ.get("PYTHONPATH", "").split(os.pathsep) if p)]
         ),

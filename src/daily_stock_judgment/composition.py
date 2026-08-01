@@ -10,6 +10,9 @@ from fastapi import FastAPI
 
 from daily_stock_judgment.application.ports import JudgmentModel, MarketDataSource
 from daily_stock_judgment.application.today_judgments import today_clock_tokyo
+from daily_stock_judgment.infrastructure.agent_cli_judgment import (
+    AgentCliJudgmentModel,
+)
 from daily_stock_judgment.infrastructure.demo_adapters import (
     DemoJudgmentModel,
     DemoMarketData,
@@ -66,7 +69,7 @@ def create_app(
         judgments=judgments,
         runs=runs,
         market=market or _default_market(),
-        model=model or DemoJudgmentModel(),  # real CLI in ticket 18
+        model=model or _default_model(),
         today=today or today_clock_tokyo(override=os.environ.get("DSJ_AS_OF")),
     )
 
@@ -76,6 +79,19 @@ def _default_market() -> MarketDataSource:
     if os.environ.get("DSJ_MARKET", "yfinance") == "demo":
         return DemoMarketData()
     return YFinanceMarketData()
+
+
+def _default_model() -> JudgmentModel:
+    # DSJ_JUDGMENT_MODEL=demo or unset DSJ_AGENT_CLI → deterministic demo LLM.
+    if os.environ.get("DSJ_JUDGMENT_MODEL", "agent") == "demo":
+        return DemoJudgmentModel()
+    command = os.environ.get("DSJ_AGENT_CLI", "").strip()
+    if not command:
+        return DemoJudgmentModel()
+    timeout = float(os.environ.get("DSJ_AGENT_TIMEOUT", "120"))
+    return AgentCliJudgmentModel.from_command_string(
+        command, timeout_seconds=timeout
+    )
 
 
 app = create_app()

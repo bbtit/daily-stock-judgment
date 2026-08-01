@@ -1,7 +1,7 @@
 """Deterministic stand-ins for local/E2E.
 
-Market: opt in with DSJ_MARKET=demo (default production market is yfinance).
-LLM: used until ticket 18 wires a real agent CLI adapter.
+Market: DSJ_MARKET=demo (default production market is yfinance).
+LLM: DSJ_JUDGMENT_MODEL=demo or unset DSJ_AGENT_CLI.
 """
 
 from __future__ import annotations

@@ -14,10 +14,15 @@ uv run daily-stock-judgment
 ブラウザ: http://127.0.0.1:8000  
 SQLite のデフォルト保存先: `data/app.db`
 
-相場は既定で yfinance。オフラインや決定論的なデモが必要なときは:
+相場は既定で yfinance。判断 LLM は `DSJ_AGENT_CLI` で指定したローカルエージェント CLI（stdin にプロンプト、stdout に JSON）。未設定時はデモ LLM。
 
 ```bash
-DSJ_MARKET=demo uv run daily-stock-judgment
+# オフライン / E2E 向けデモ
+DSJ_MARKET=demo DSJ_JUDGMENT_MODEL=demo uv run daily-stock-judgment
+
+# 運用側 CLI の例（製品名は固定しない。プロンプトは stdin、JSON は stdout）
+DSJ_AGENT_CLI='my-agent --print' uv run daily-stock-judgment
+# 任意: DSJ_AGENT_TIMEOUT=120（秒）
 ```
 
 ### E2E（Playwright）
@@ -75,7 +80,9 @@ BASE_URL=http://127.0.0.1:8000 uv run pytest e2e -q
     │   ├── sqlite_day_run_store.py
     │   ├── memory_day_run_store.py
     │   ├── yfinance_market.py
-    │   └── demo_adapters.py          # DSJ_MARKET=demo / LLM 仮実装
+    │   ├── agent_cli_judgment.py
+    │   ├── agent_prompt.py
+    │   └── demo_adapters.py          # DSJ_MARKET / DSJ_JUDGMENT_MODEL=demo
     └── presentation/          # FastAPI + テンプレート
         ├── web.py
         └── templates/

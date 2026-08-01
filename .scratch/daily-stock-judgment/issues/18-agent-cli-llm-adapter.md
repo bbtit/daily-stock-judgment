@@ -4,9 +4,9 @@
 
 **Blocked by:** 15 — フェイクで日次判断ランナーが回る
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] 1銘柄1回で入力（ticker / as_of / is_holding / bars）を渡せる
-- [ ] 出力は ticker / score / reason（label なし）をパースできる
-- [ ] 事後検証不合格・呼び出し失敗時の再試行がランナーの既存ルールに乗る
-- [ ] 特定製品名へのハード固定なし（運用側で CLI を選べる前提）
+- [x] 1銘柄1回で入力（ticker / as_of / is_holding / bars）を渡せる
+- [x] 出力は ticker / score / reason（label なし）をパースできる
+- [x] 事後検証不合格・呼び出し失敗時の再試行がランナーの既存ルールに乗る
+- [x] 特定製品名へのハード固定なし（運用側で CLI を選べる前提）

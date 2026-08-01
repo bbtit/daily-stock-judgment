@@ -47,6 +47,7 @@ composition（配線のみ）
 - 銘柄台帳: `InstrumentBook` + `manage_instruments`
 - 日次判断ランナー: `run_daily_judgments` + `MarketDataSource` / `JudgmentModel` / `JudgmentBook`（テストはフェイク差し替え）
 - 相場の本番アダプタ: `YFinanceMarketData`（`DSJ_MARKET=demo` でデモに切替）
+- 判断 LLM の本番アダプタ: `AgentCliJudgmentModel`（`DSJ_AGENT_CLI`、未設定または `DSJ_JUDGMENT_MODEL=demo` でデモ）
 
 ## Testing
 
