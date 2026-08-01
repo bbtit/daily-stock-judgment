@@ -10,7 +10,9 @@ from daily_stock_judgment.infrastructure.sqlite_instrument_store import (
 )
 
 
-def test_persists_across_reopen(tmp_path: Path) -> None:
+def test_ストアを開き直したときウォッチリストと保有が残っている(
+    tmp_path: Path,
+) -> None:
     db_path = tmp_path / "app.db"
     first = SqliteInstrumentStore(db_path)
     uc.add_to_watchlist(first, "7203.T")

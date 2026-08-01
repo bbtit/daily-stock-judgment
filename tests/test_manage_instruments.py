@@ -9,7 +9,7 @@ from daily_stock_judgment.infrastructure.memory_instrument_store import (
 )
 
 
-def test_add_and_list_watchlist() -> None:
+def test_ウォッチリストに追加したとき一覧にそのティッカーが含まれる() -> None:
     book = InMemoryInstrumentStore()
 
     result = uc.add_to_watchlist(book, "7203.T")
@@ -18,7 +18,7 @@ def test_add_and_list_watchlist() -> None:
     assert uc.list_watchlist(book) == (Ticker("7203.T"),)
 
 
-def test_remove_from_watchlist() -> None:
+def test_ウォッチリストから削除したとき一覧からそのティッカーが消える() -> None:
     book = InMemoryInstrumentStore()
     uc.add_to_watchlist(book, "7203.T")
     uc.add_to_watchlist(book, "6758.T")
@@ -29,7 +29,26 @@ def test_remove_from_watchlist() -> None:
     assert uc.list_watchlist(book) == (Ticker("6758.T"),)
 
 
-def test_register_holding_with_optional_quantity() -> None:
+def test_ウォッチリストのティッカーを変更したとき新しい値に置き換わる() -> None:
+    book = InMemoryInstrumentStore()
+    uc.add_to_watchlist(book, "7203.T")
+
+    result = uc.replace_watchlist_ticker(book, "7203.T", "6758.T")
+
+    assert isinstance(result, Ok)
+    assert uc.list_watchlist(book) == (Ticker("6758.T"),)
+
+
+def test_日本株以外のティッカーを追加しようとしたときエラーになる() -> None:
+    book = InMemoryInstrumentStore()
+
+    result = uc.add_to_watchlist(book, "AAPL")
+
+    assert isinstance(result, Err)
+    assert "7203.T" in result.error
+
+
+def test_保有を数量ありとなしで登録したとき両方とも一覧に並ぶ() -> None:
     book = InMemoryInstrumentStore()
 
     uc.register_holding(book, "7203.T", quantity=100)
@@ -41,7 +60,7 @@ def test_register_holding_with_optional_quantity() -> None:
     )
 
 
-def test_unregister_holding() -> None:
+def test_保有を解除したとき一覧が空になる() -> None:
     book = InMemoryInstrumentStore()
     uc.register_holding(book, "7203.T", quantity=10)
 
@@ -51,7 +70,7 @@ def test_unregister_holding() -> None:
     assert uc.list_holdings(book) == ()
 
 
-def test_update_holding_quantity() -> None:
+def test_同じ銘柄の保有を再登録したとき数量が上書きされる() -> None:
     book = InMemoryInstrumentStore()
     uc.register_holding(book, "7203.T", quantity=10)
 
@@ -60,22 +79,3 @@ def test_update_holding_quantity() -> None:
     assert uc.list_holdings(book) == (
         Holding(ticker=Ticker("7203.T"), quantity=20.0),
     )
-
-
-def test_replace_watchlist_ticker() -> None:
-    book = InMemoryInstrumentStore()
-    uc.add_to_watchlist(book, "7203.T")
-
-    result = uc.replace_watchlist_ticker(book, "7203.T", "6758.T")
-
-    assert isinstance(result, Ok)
-    assert uc.list_watchlist(book) == (Ticker("6758.T"),)
-
-
-def test_rejects_non_japan_yahoo_ticker() -> None:
-    book = InMemoryInstrumentStore()
-
-    result = uc.add_to_watchlist(book, "AAPL")
-
-    assert isinstance(result, Err)
-    assert "7203.T" in result.error
