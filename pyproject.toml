@@ -31,6 +31,7 @@ packages = ["src/daily_stock_judgment"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "src/daily_stock_judgment/presentation/templates" = "daily_stock_judgment/presentation/templates"
+"src/daily_stock_judgment/presentation/static" = "daily_stock_judgment/presentation/static"
 
 [tool.uv]
 default-groups = ["dev"]

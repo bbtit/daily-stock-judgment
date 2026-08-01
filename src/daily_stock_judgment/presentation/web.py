@@ -7,7 +7,7 @@ from urllib.parse import quote
 
 import structlog
 from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from daily_stock_judgment.application import manage_instruments as uc
@@ -30,9 +30,9 @@ from daily_stock_judgment.presentation.request_context import (
 
 logger = structlog.get_logger(__name__)
 
-TEMPLATES = Jinja2Templates(
-    directory=str(Path(__file__).resolve().parent / "templates")
-)
+_PRESENTATION_DIR = Path(__file__).resolve().parent
+TEMPLATES = Jinja2Templates(directory=str(_PRESENTATION_DIR / "templates"))
+_FAVICON = _PRESENTATION_DIR / "static" / "favicon.ico"
 
 
 def create_app(
@@ -57,6 +57,10 @@ def create_app(
         if error:
             return RedirectResponse(f"/?error={quote(error)}", status_code=303)
         return RedirectResponse("/", status_code=303)
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon() -> FileResponse:
+        return FileResponse(_FAVICON, media_type="image/x-icon")
 
     @app.get("/", response_class=HTMLResponse)
     def index(request: Request) -> HTMLResponse:
