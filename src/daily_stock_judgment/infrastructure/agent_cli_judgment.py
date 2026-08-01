@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import shlex
 import subprocess
+import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date
@@ -16,7 +18,10 @@ from daily_stock_judgment.domain.result import Err, Ok, Result
 from daily_stock_judgment.domain.ticker import Ticker
 from daily_stock_judgment.infrastructure.agent_prompt import build_prompt
 
+logger = logging.getLogger(__name__)
+
 _JSON_OBJECT = re.compile(r"\{.*\}", re.DOTALL)
+_PROMPT_LOG_LIMIT = 80
 
 
 @dataclass(frozen=True)
@@ -24,31 +29,55 @@ class CliRunResult:
     stdout: str
     exit_code: int
     timed_out: bool = False
+    stderr: str = ""
 
 
 CliRunner = Callable[[Sequence[str], str], CliRunResult]
 
+_PROMPT_PLACEHOLDER = "{prompt}"
+
+
+def expand_command(
+    command: Sequence[str], prompt: str
+) -> tuple[tuple[str, ...], bool]:
+    """Replace `{prompt}` in argv. Returns (argv, embedded)."""
+    embedded = False
+    expanded: list[str] = []
+    for part in command:
+        if _PROMPT_PLACEHOLDER in part:
+            embedded = True
+            expanded.append(part.replace(_PROMPT_PLACEHOLDER, prompt))
+        else:
+            expanded.append(part)
+    return tuple(expanded), embedded
+
 
 def run_cli_subprocess(
     command: Sequence[str],
-    prompt: str,
+    stdin_text: str,
     *,
     timeout_seconds: float,
 ) -> CliRunResult:
     try:
         completed = subprocess.run(
             list(command),
-            input=prompt,
+            input=stdin_text,
             capture_output=True,
             text=True,
             timeout=timeout_seconds,
             check=False,
         )
     except subprocess.TimeoutExpired:
-        return CliRunResult(stdout="", exit_code=-1, timed_out=True)
-    except OSError:
-        return CliRunResult(stdout="", exit_code=-1, timed_out=False)
-    return CliRunResult(stdout=completed.stdout or "", exit_code=completed.returncode)
+        return CliRunResult(stdout="", stderr="", exit_code=-1, timed_out=True)
+    except OSError as exc:
+        return CliRunResult(
+            stdout="", stderr=str(exc), exit_code=-1, timed_out=False
+        )
+    return CliRunResult(
+        stdout=completed.stdout or "",
+        stderr=completed.stderr or "",
+        exit_code=completed.returncode,
+    )
 
 
 def parse_judgment_json(raw: str, *, expected_ticker: str) -> Result[JudgmentDraft, str]:
@@ -78,7 +107,11 @@ def parse_judgment_json(raw: str, *, expected_ticker: str) -> Result[JudgmentDra
 
 
 class AgentCliJudgmentModel:
-    """Invoke an operator-chosen CLI; prompt on stdin, JSON on stdout."""
+    """Invoke an operator-chosen CLI; JSON on stdout.
+
+    If the command template contains `{prompt}`, it is substituted into argv
+    and stdin is left empty. Otherwise the prompt is written to stdin.
+    """
 
     def __init__(
         self,
@@ -92,8 +125,8 @@ class AgentCliJudgmentModel:
         self._command = tuple(command)
         self._timeout_seconds = timeout_seconds
         self._run = run or (
-            lambda cmd, prompt: run_cli_subprocess(
-                cmd, prompt, timeout_seconds=timeout_seconds
+            lambda cmd, stdin_text: run_cli_subprocess(
+                cmd, stdin_text, timeout_seconds=timeout_seconds
             )
         )
 
@@ -121,10 +154,78 @@ class AgentCliJudgmentModel:
         prompt = build_prompt(
             ticker=ticker, as_of=as_of, is_holding=is_holding, bars=bars
         )
-        result = self._run(self._command, prompt)
+        argv, embedded = expand_command(self._command, prompt)
+        stdin_text = "" if embedded else prompt
+        logger.info(
+            "agent CLI start ticker=%s template=%s embedded=%s prompt_chars=%d timeout=%.0fs",
+            ticker.value,
+            shlex.join(self._command),
+            embedded,
+            len(prompt),
+            self._timeout_seconds,
+        )
+        logger.debug(
+            "agent CLI argv ticker=%s %s",
+            ticker.value,
+            _argv_for_log(argv, embedded=embedded),
+        )
+        started = time.monotonic()
+        result = self._run(argv, stdin_text)
+        elapsed = time.monotonic() - started
         if result.timed_out or result.exit_code != 0:
+            logger.warning(
+                "agent CLI failed ticker=%s exit=%s timed_out=%s elapsed=%.1fs "
+                "stderr=%r stdout=%r",
+                ticker.value,
+                result.exit_code,
+                result.timed_out,
+                elapsed,
+                _clip(result.stderr, 500),
+                _clip(result.stdout, 500),
+            )
             return Err(FailureKind.JUDGMENT_FAILED)
+        # Some CLIs print diagnostics on stderr; prefer stdout, then combined.
         parsed = parse_judgment_json(result.stdout, expected_ticker=ticker.value)
+        if isinstance(parsed, Err) and result.stderr:
+            parsed = parse_judgment_json(
+                f"{result.stdout}\n{result.stderr}",
+                expected_ticker=ticker.value,
+            )
         if isinstance(parsed, Err):
+            logger.warning(
+                "agent CLI parse failed ticker=%s reason=%s elapsed=%.1fs "
+                "stdout=%r stderr=%r",
+                ticker.value,
+                parsed.error,
+                elapsed,
+                _clip(result.stdout, 500),
+                _clip(result.stderr, 500),
+            )
             return Err(FailureKind.JUDGMENT_FAILED)
+        logger.info(
+            "agent CLI ok ticker=%s score=%s elapsed=%.1fs reason=%s",
+            ticker.value,
+            parsed.value.score,
+            elapsed,
+            _clip(parsed.value.reason, 120),
+        )
         return Ok(parsed.value)
+
+
+def _clip(text: str, limit: int) -> str:
+    text = text.replace("\n", "\\n")
+    if len(text) <= limit:
+        return text
+    return text[: limit - 1] + "…"
+
+
+def _argv_for_log(argv: Sequence[str], *, embedded: bool) -> str:
+    if not embedded:
+        return shlex.join(argv)
+    redacted: list[str] = []
+    for part in argv:
+        if len(part) > _PROMPT_LOG_LIMIT and ("入力 JSON" in part or "\n" in part):
+            redacted.append(f"<prompt {len(part)} chars>")
+        else:
+            redacted.append(part)
+    return shlex.join(redacted)

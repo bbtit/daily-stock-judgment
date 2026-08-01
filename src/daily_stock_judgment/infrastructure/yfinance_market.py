@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -11,6 +12,8 @@ from daily_stock_judgment.domain.bar import Bar
 from daily_stock_judgment.domain.judgment import FailureKind
 from daily_stock_judgment.domain.result import Err, Ok, Result
 from daily_stock_judgment.domain.ticker import Ticker
+
+logger = logging.getLogger(__name__)
 
 # Calendar span long enough to cover ~60 trading days plus holidays.
 _LOOKBACK_CALENDAR_DAYS = 120
@@ -78,11 +81,31 @@ class YFinanceMarketData:
     def session_status(self, as_of: date) -> SessionStatus:
         try:
             rows = self._fetch_range(self._session_probe, as_of)
-        except Exception:
+        except Exception as exc:
             # Network/Yahoo faults are not exchange holidays; let per-ticker fetch decide.
+            logger.warning(
+                "session probe error as_of=%s probe=%s err=%s; treating as OPEN",
+                as_of.isoformat(),
+                self._session_probe,
+                exc,
+            )
             return SessionStatus.OPEN
         if any(row.date == as_of for row in rows):
+            logger.info(
+                "session OPEN as_of=%s probe=%s rows=%d",
+                as_of.isoformat(),
+                self._session_probe,
+                len(rows),
+            )
             return SessionStatus.OPEN
+        last = rows[-1].date.isoformat() if rows else "-"
+        logger.info(
+            "session CLOSED as_of=%s probe=%s rows=%d last_bar=%s",
+            as_of.isoformat(),
+            self._session_probe,
+            len(rows),
+            last,
+        )
         return SessionStatus.CLOSED
 
     def bars_for(
@@ -90,9 +113,20 @@ class YFinanceMarketData:
     ) -> Result[tuple[Bar, ...], FailureKind]:
         try:
             rows = self._fetch_range(ticker.value, as_of)
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "yfinance fetch error ticker=%s as_of=%s err=%s",
+                ticker.value,
+                as_of.isoformat(),
+                exc,
+            )
             return Err(FailureKind.UNAVAILABLE)
         if not rows:
+            logger.warning(
+                "yfinance empty ticker=%s as_of=%s",
+                ticker.value,
+                as_of.isoformat(),
+            )
             return Err(FailureKind.UNAVAILABLE)
 
         capped = tuple(
@@ -108,8 +142,21 @@ class YFinanceMarketData:
             if row.date <= as_of
         )[-_MAX_BARS:]
         if not capped:
+            logger.warning(
+                "yfinance no bars <= as_of ticker=%s as_of=%s raw_rows=%d",
+                ticker.value,
+                as_of.isoformat(),
+                len(rows),
+            )
             return Err(FailureKind.UNAVAILABLE)
         if capped[-1].date != as_of:
+            logger.info(
+                "yfinance DATA_MISSING ticker=%s as_of=%s last_bar=%s count=%d",
+                ticker.value,
+                as_of.isoformat(),
+                capped[-1].date.isoformat(),
+                len(capped),
+            )
             return Err(FailureKind.DATA_MISSING)
         return Ok(capped)
 

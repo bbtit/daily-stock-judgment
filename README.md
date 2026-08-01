@@ -20,10 +20,18 @@ SQLite のデフォルト保存先: `data/app.db`
 # オフライン / E2E 向けデモ
 DSJ_MARKET=demo DSJ_JUDGMENT_MODEL=demo uv run daily-stock-judgment
 
-# 運用側 CLI の例（製品名は固定しない。プロンプトは stdin、JSON は stdout）
+# 運用側 CLI の例（製品名は固定しない。JSON は stdout）
+# {prompt} あり → 引数に埋め込み / なし → stdin にプロンプト
+DSJ_AGENT_CLI='agent -p {prompt} --trust' uv run daily-stock-judgment
 DSJ_AGENT_CLI='my-agent --print' uv run daily-stock-judgment
 # 任意: DSJ_AGENT_TIMEOUT=120（秒）
+# 判断日をずらす（未設定時は Asia/Tokyo の本日）
+DSJ_AS_OF=2026-07-31 uv run daily-stock-judgment
+# ログ詳細度（既定 INFO。CLI argv 全文は DEBUG）
+DSJ_LOG_LEVEL=DEBUG uv run daily-stock-judgment
 ```
+
+Cursor Agent（`agent`）は非対話実行時にワークスペース信頼が必要です。`--trust`（または `-f` / `--yolo`）を付けないと JSON が返らず「判断失敗」になります。
 
 ### E2E（Playwright）
 

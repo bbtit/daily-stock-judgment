@@ -8,8 +8,6 @@ from daily_stock_judgment.domain.result import Err, Ok, Result
 _LABEL_WORDS = tuple(label.value for label in Label)
 _MAX_REASON_LEN = 200
 _CLOSE_OBSERVATION = re.compile(r"終値|前日比|高安")
-_BULLISH = re.compile(r"上昇|高値|高寄り|買い優勢")
-_BEARISH = re.compile(r"下落|安値|安寄り|売られ")
 
 
 def validate_draft(draft: JudgmentDraft) -> Result[JudgmentDraft, str]:
@@ -26,8 +24,4 @@ def validate_draft(draft: JudgmentDraft) -> Result[JudgmentDraft, str]:
         return Err("reason must not contain label words")
     if not _CLOSE_OBSERVATION.search(reason):
         return Err("reason must observe close level or change")
-    if draft.score > 0 and _BEARISH.search(reason) and not _BULLISH.search(reason):
-        return Err("reason sign mismatches score")
-    if draft.score < 0 and _BULLISH.search(reason) and not _BEARISH.search(reason):
-        return Err("reason sign mismatches score")
     return Ok(JudgmentDraft(score=draft.score, reason=reason))

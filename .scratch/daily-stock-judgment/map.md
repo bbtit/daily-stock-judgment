@@ -18,7 +18,7 @@
 - [yfinanceは日本株の日足取得に足りるか](.scratch/daily-stock-judgment/issues/01-yfinance-japan-daily-ohlcv.md) — 個人の大引け後日次なら足りる（.T日足可・20分遅延）。規約/安定性を取るならJ-Quants Light以上
 - [スコアからラベルへの変換ルールは何か](.scratch/daily-stock-judgment/issues/02-score-to-label-thresholds.md) — 固定閾値（≥+50買う、≤−50売る／未保有は様子見、他は様子見）。ラベルはシステム付与
 - [LLMに渡す株価履歴の期間はどのくらいか](.scratch/daily-stock-judgment/issues/03-price-history-lookback.md) — 直近60営業日（共通）。不足分は取れるだけ渡す
-- [短い理由に必須の要素は何か](.scratch/daily-stock-judgment/issues/04-reason-requirements.md) — 観察必須（終値の水準／変化）・解釈任意・約200字・禁止表現あり。ラベル語禁止、符号不一致は再生成1回後エラー
+- [短い理由に必須の要素は何か](.scratch/daily-stock-judgment/issues/04-reason-requirements.md) — 観察必須（終値の水準／変化）・解釈任意・約200字・禁止表現あり。ラベル語禁止。符号整合はプロンプト任せ
 - [どのLLMプロバイダとモデルを前提にするか](.scratch/daily-stock-judgment/issues/05-llm-provider-premise.md) — 遵守優先。ローカルエージェントCLI経由（製品・モデル名は固定しない）。切替UIなし。一覧はlocalhost
 - [ウォッチリストと保有はどう登録・更新するか](.scratch/daily-stock-judgment/issues/06-watchlist-holdings-ux.md) — SQLite正本＋画面CRUD。数量任意。日次は追加削除・保有登録解除・一覧閲覧
 - [大引け後ジョブの時刻と休場日はどうするか](.scratch/daily-stock-judgment/issues/07-after-close-schedule.md) — 手動正・OS自動は任意。推奨16–21時JST。休場は新規判断なし。欠落は再実行可

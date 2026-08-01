@@ -250,28 +250,29 @@ def test_LLM呼び出しが二度失敗したとき判断失敗になる() -> No
     assert store.list_for(AS_OF) == ()
 
 
-def test_スコアと理由の向きが食い違うとき再生成後もダメなら判断失敗になる() -> None:
+def test_スコアと理由の向きが食い違っても機械契約を満たせば成功する() -> None:
+    # 符号×極性ワードの事後検証は捨てた（「高値から押し戻し」等が誤検知されるため）。
     market = FakeMarketData(bars_by_ticker={"7203.T": [_bar(AS_OF)]})
     model = FakeJudgmentModel(
         drafts_by_ticker={
-            "7203.T": [
-                JudgmentDraft(score=80, reason="終値は前日比で下落した。"),
-                JudgmentDraft(score=80, reason="終値は安値圏へ沈んだ。"),
-            ]
+            "7203.T": JudgmentDraft(
+                score=-42,
+                reason="終値3067円は前日比で安寄り。直近高値3233円からの押し戻し。",
+            )
         }
     )
 
     result, store = _run(
-        targets=(JudgmentTarget(Ticker("7203.T"), is_holding=False),),
+        targets=(JudgmentTarget(Ticker("7203.T"), is_holding=True),),
         market=market,
         model=model,
     )
 
     outcome = result.outcomes[0]
-    assert isinstance(outcome, FailedJudgment)
-    assert outcome.kind is FailureKind.JUDGMENT_FAILED
-    assert model.call_counts["7203.T"] == 2
-    assert store.list_for(AS_OF) == ()
+    assert isinstance(outcome, SuccessfulJudgment)
+    assert outcome.score == -42
+    assert model.call_counts["7203.T"] == 1
+    assert len(store.list_for(AS_OF)) == 1
 
 
 def test_成功した判断だけが保存され同日再実行で上書きされる() -> None:

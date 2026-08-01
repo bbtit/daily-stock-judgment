@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from datetime import date
 from pathlib import Path
@@ -22,6 +23,8 @@ from daily_stock_judgment.application.today_judgments import (
     run_today_judgments,
 )
 from daily_stock_judgment.domain.result import Err
+
+logger = logging.getLogger(__name__)
 
 TEMPLATES = Jinja2Templates(
     directory=str(Path(__file__).resolve().parent / "templates")
@@ -74,13 +77,21 @@ def create_app(
 
     @app.post("/judgments/run")
     def run_judgments() -> RedirectResponse:
-        run_today_judgments(
-            as_of=app.state.today(),
+        as_of = app.state.today()
+        logger.info("HTTP POST /judgments/run as_of=%s", as_of.isoformat())
+        view = run_today_judgments(
+            as_of=as_of,
             book=book,
             judgments=judgments,
             runs=runs,
             market=app.state.market,
             model=app.state.model,
+        )
+        logger.info(
+            "HTTP /judgments/run finished as_of=%s market_closed=%s rows=%d",
+            view.as_of.isoformat(),
+            view.market_closed,
+            len(view.rows),
         )
         return _redirect_home()
 

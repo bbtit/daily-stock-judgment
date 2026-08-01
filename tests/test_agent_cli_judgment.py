@@ -158,29 +158,29 @@ def test_タイムアウトのとき判断失敗になる() -> None:
     assert draft.error is FailureKind.JUDGMENT_FAILED
 
 
-def test_符号不一致理由は再生成後もダメなら判断失敗になる() -> None:
-    replies = [
-        '{"ticker":"7203.T","score":80,"reason":"終値は前日比で下落した。"}',
-        '{"ticker":"7203.T","score":80,"reason":"終値は安値圏へ沈んだ。"}',
-    ]
-
+def test_高値言及を含む負スコア理由は成功する() -> None:
     def run(command, prompt: str) -> CliRunResult:
         del command, prompt
-        return CliRunResult(stdout=replies.pop(0), exit_code=0)
+        return CliRunResult(
+            stdout=(
+                '{"ticker":"7203.T","score":-42,'
+                '"reason":"終値3067円は前日比で安寄り。直近高値3233円からの押し戻し。"}'
+            ),
+            exit_code=0,
+        )
 
     model = AgentCliJudgmentModel(("agent",), run=run)
     market = FakeMarketData(bars_by_ticker={"7203.T": list(BARS)})
     result = run_daily_judgments(
         as_of=AS_OF,
-        targets=(JudgmentTarget(Ticker("7203.T"), is_holding=False),),
+        targets=(JudgmentTarget(Ticker("7203.T"), is_holding=True),),
         market=market,
         model=model,
         store=InMemoryJudgmentStore(),
     )
     outcome = result.outcomes[0]
-    assert isinstance(outcome, FailedJudgment)
-    assert outcome.kind is FailureKind.JUDGMENT_FAILED
-    assert replies == []
+    assert isinstance(outcome, SuccessfulJudgment)
+    assert outcome.score == -42
 
 
 def test_コマンド文字列から製品固定なしで組み立てられる() -> None:
@@ -199,3 +199,44 @@ def test_コマンド文字列から製品固定なしで組み立てられる()
     )
     assert isinstance(model.draft(Ticker("7203.T"), AS_OF, False, BARS), Ok)
     assert seen == [("fancy-cli", "--json")]
+
+
+def test_promptプレースホルダがあるとき引数に埋め込みstdinは空になる() -> None:
+    seen_cmd: list[tuple[str, ...]] = []
+    seen_stdin: list[str] = []
+
+    def run(command, stdin_text: str) -> CliRunResult:
+        seen_cmd.append(tuple(command))
+        seen_stdin.append(stdin_text)
+        return CliRunResult(
+            stdout='{"ticker":"7203.T","score":62,"reason":"終値は前日比で高寄り。"}',
+            exit_code=0,
+        )
+
+    model = AgentCliJudgmentModel.from_command_string(
+        "agent -p {prompt}", run=run
+    )
+    assert isinstance(model.draft(Ticker("7203.T"), AS_OF, False, BARS), Ok)
+    assert seen_cmd[0][0] == "agent"
+    assert seen_cmd[0][1] == "-p"
+    assert "入力 JSON:" in seen_cmd[0][2]
+    assert '"ticker":"7203.T"' in seen_cmd[0][2].replace(" ", "")
+    assert seen_stdin == [""]
+
+
+def test_promptプレースホルダが無いとき従来どおりstdinに渡る() -> None:
+    seen_cmd: list[tuple[str, ...]] = []
+    seen_stdin: list[str] = []
+
+    def run(command, stdin_text: str) -> CliRunResult:
+        seen_cmd.append(tuple(command))
+        seen_stdin.append(stdin_text)
+        return CliRunResult(
+            stdout='{"ticker":"7203.T","score":10,"reason":"終値100円前後。"}',
+            exit_code=0,
+        )
+
+    model = AgentCliJudgmentModel.from_command_string("my-agent", run=run)
+    assert isinstance(model.draft(Ticker("7203.T"), AS_OF, False, BARS), Ok)
+    assert seen_cmd == [("my-agent",)]
+    assert "入力 JSON:" in seen_stdin[0]
