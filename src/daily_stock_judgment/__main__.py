@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uvicorn
 
-from daily_stock_judgment.web import app
+from daily_stock_judgment.composition import app
 
 
 def main() -> None:

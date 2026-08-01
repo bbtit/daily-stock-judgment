@@ -134,18 +134,18 @@
           {% for ticker in watchlist %}
           <li>
             <form class="row" method="post" action="/watchlist/replace">
-              <input type="hidden" name="old_ticker" value="{{ ticker }}" />
+              <input type="hidden" name="old_ticker" value="{{ ticker.value }}" />
               <input
                 type="text"
                 name="new_ticker"
-                value="{{ ticker }}"
+                value="{{ ticker.value }}"
                 required
                 autocomplete="off"
               />
               <button type="submit">変更</button>
             </form>
             <form method="post" action="/watchlist/remove">
-              <input type="hidden" name="ticker" value="{{ ticker }}" />
+              <input type="hidden" name="ticker" value="{{ ticker.value }}" />
               <button class="secondary" type="submit">削除</button>
             </form>
           </li>
@@ -180,13 +180,13 @@
           {% for item in holdings %}
           <li>
             <span>
-              {{ item.ticker }}
+              {{ item.ticker.value }}
               {% if item.quantity is not none %}
               <span class="meta">× {{ item.quantity }}</span>
               {% endif %}
             </span>
             <form method="post" action="/holdings/remove">
-              <input type="hidden" name="ticker" value="{{ item.ticker }}" />
+              <input type="hidden" name="ticker" value="{{ item.ticker.value }}" />
               <button class="secondary" type="submit">解除</button>
             </form>
           </li>

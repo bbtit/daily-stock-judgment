@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from daily_stock_judgment.web import create_app
+from daily_stock_judgment.composition import create_app
 
 
 def test_web_crud_watchlist_and_holdings(tmp_path: Path) -> None:
