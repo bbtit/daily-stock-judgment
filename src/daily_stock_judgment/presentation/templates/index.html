@@ -117,12 +117,18 @@
       <p class="error" role="alert">{{ error }}</p>
       {% endif %}
 
-      <section>
-        <h2>ウォッチリスト</h2>
-        <form class="row" method="post" action="/watchlist">
+      <section aria-labelledby="watchlist-heading">
+        <h2 id="watchlist-heading">ウォッチリスト</h2>
+        <form
+          class="row"
+          method="post"
+          action="/watchlist"
+          aria-label="ウォッチリストに追加"
+        >
           <input
             type="text"
             name="ticker"
+            aria-label="ウォッチリストのティッカー"
             placeholder="例: 7203.T"
             required
             autocomplete="off"
@@ -130,21 +136,31 @@
           <button type="submit">追加</button>
         </form>
         {% if watchlist %}
-        <ul>
+        <ul aria-label="ウォッチリストの銘柄">
           {% for ticker in watchlist %}
           <li>
-            <form class="row" method="post" action="/watchlist/replace">
+            <form
+              class="row"
+              method="post"
+              action="/watchlist/replace"
+              aria-label="ウォッチリストの銘柄を変更"
+            >
               <input type="hidden" name="old_ticker" value="{{ ticker.value }}" />
               <input
                 type="text"
                 name="new_ticker"
+                aria-label="変更後のティッカー"
                 value="{{ ticker.value }}"
                 required
                 autocomplete="off"
               />
               <button type="submit">変更</button>
             </form>
-            <form method="post" action="/watchlist/remove">
+            <form
+              method="post"
+              action="/watchlist/remove"
+              aria-label="ウォッチリストから削除"
+            >
               <input type="hidden" name="ticker" value="{{ ticker.value }}" />
               <button class="secondary" type="submit">削除</button>
             </form>
@@ -156,12 +172,18 @@
         {% endif %}
       </section>
 
-      <section>
-        <h2>保有</h2>
-        <form class="row" method="post" action="/holdings">
+      <section aria-labelledby="holdings-heading">
+        <h2 id="holdings-heading">保有</h2>
+        <form
+          class="row"
+          method="post"
+          action="/holdings"
+          aria-label="保有を登録"
+        >
           <input
             type="text"
             name="ticker"
+            aria-label="保有のティッカー"
             placeholder="例: 7203.T"
             required
             autocomplete="off"
@@ -169,6 +191,7 @@
           <input
             type="number"
             name="quantity"
+            aria-label="保有数量"
             placeholder="数量（任意）"
             step="any"
             min="0"
@@ -176,7 +199,7 @@
           <button type="submit">登録 / 更新</button>
         </form>
         {% if holdings %}
-        <ul>
+        <ul aria-label="保有銘柄">
           {% for item in holdings %}
           <li>
             <span>
@@ -185,7 +208,11 @@
               <span class="meta">× {{ item.quantity }}</span>
               {% endif %}
             </span>
-            <form method="post" action="/holdings/remove">
+            <form
+              method="post"
+              action="/holdings/remove"
+              aria-label="保有を解除"
+            >
               <input type="hidden" name="ticker" value="{{ item.ticker.value }}" />
               <button class="secondary" type="submit">解除</button>
             </form>

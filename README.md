@@ -6,12 +6,23 @@
 
 ```bash
 uv sync
+uv run playwright install chromium
 uv run pytest -q
 uv run daily-stock-judgment
 ```
 
 ブラウザ: http://127.0.0.1:8000  
 SQLite のデフォルト保存先: `data/app.db`
+
+### E2E（Playwright）
+
+振る舞いをブラウザ経由で検証する。内部モジュールは import せず、URL とアクセシブル名だけで操作する（将来の FE/BE 分離後も `BASE_URL` を差し替えれば同じスイートを使える）。
+
+```bash
+uv run pytest e2e -q
+# 既に起動中のアプリへ向ける場合:
+BASE_URL=http://127.0.0.1:8000 uv run pytest e2e -q
+```
 
 ## アーキテクチャ
 
@@ -30,6 +41,7 @@ SQLite のデフォルト保存先: `data/app.db`
 ├── .python-version
 ├── data/                      # ローカル SQLite（*.db は gitignore）
 ├── tests/                     # ユースケース seam + SQLite 永続化 + Web
+├── e2e/                       # Playwright（ブラウザ振る舞い）
 ├── .scratch/                  # 仕様・wayfinder（実装コード外）
 └── src/daily_stock_judgment/
     ├── __main__.py            # CLI エントリ

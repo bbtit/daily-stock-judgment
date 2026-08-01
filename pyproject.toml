@@ -17,6 +17,7 @@ daily-stock-judgment = "daily_stock_judgment.__main__:main"
 dev = [
   "pytest>=8.0.0",
   "httpx>=0.27.0",
+  "pytest-playwright>=0.7.0",
 ]
 
 [build-system]
@@ -35,3 +36,6 @@ default-groups = ["dev"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+  "e2e: browser end-to-end tests (Playwright)",
+]
