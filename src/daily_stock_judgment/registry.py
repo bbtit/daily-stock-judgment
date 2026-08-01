@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import re
 import sqlite3
 from pathlib import Path
+
+_TICKER_RE = re.compile(r"^[0-9A-Z]+\.T$")
 
 
 class InstrumentRegistry:
@@ -51,6 +54,16 @@ class InstrumentRegistry:
         with self._connect() as conn:
             conn.execute("DELETE FROM watchlist WHERE ticker = ?", (normalized,))
 
+    def replace_watchlist_ticker(self, old_ticker: str, new_ticker: str) -> None:
+        old = _normalize_ticker(old_ticker)
+        new = _normalize_ticker(new_ticker)
+        with self._connect() as conn:
+            conn.execute("DELETE FROM watchlist WHERE ticker = ?", (old,))
+            conn.execute(
+                "INSERT OR IGNORE INTO watchlist (ticker) VALUES (?)",
+                (new,),
+            )
+
     def register_holding(
         self, ticker: str, quantity: float | None = None
     ) -> None:
@@ -83,4 +96,6 @@ def _normalize_ticker(ticker: str) -> str:
     cleaned = ticker.strip().upper()
     if not cleaned:
         raise ValueError("ticker must not be empty")
+    if not _TICKER_RE.match(cleaned):
+        raise ValueError("ticker must be a Japan Yahoo symbol like 7203.T")
     return cleaned

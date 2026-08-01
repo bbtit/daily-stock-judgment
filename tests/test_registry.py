@@ -63,3 +63,23 @@ def test_persists_across_reopen(tmp_path: Path) -> None:
 
     assert second.list_watchlist() == ["7203.T"]
     assert second.list_holdings() == [{"ticker": "6758.T", "quantity": 5.0}]
+
+
+def test_replace_watchlist_ticker(tmp_path: Path) -> None:
+    registry = InstrumentRegistry(tmp_path / "app.db")
+    registry.add_to_watchlist("7203.T")
+
+    registry.replace_watchlist_ticker("7203.T", "6758.T")
+
+    assert registry.list_watchlist() == ["6758.T"]
+
+
+def test_rejects_non_japan_yahoo_ticker(tmp_path: Path) -> None:
+    registry = InstrumentRegistry(tmp_path / "app.db")
+
+    try:
+        registry.add_to_watchlist("AAPL")
+    except ValueError as exc:
+        assert "7203.T" in str(exc)
+    else:
+        raise AssertionError("expected ValueError")

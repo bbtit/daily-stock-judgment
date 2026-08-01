@@ -38,6 +38,14 @@
         color: var(--muted);
         margin: 0 0 2rem;
       }
+      .error {
+        color: #8b1e1e;
+        background: #fdecec;
+        border: 1px solid #f0c2c2;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin: 0 0 1.25rem;
+      }
       section {
         background: var(--card);
         border: 1px solid var(--line);
@@ -105,6 +113,9 @@
     <main>
       <h1>日次売買判断</h1>
       <p class="lede">ウォッチリストと保有を登録・更新します。</p>
+      {% if error %}
+      <p class="error" role="alert">{{ error }}</p>
+      {% endif %}
 
       <section>
         <h2>ウォッチリスト</h2>
@@ -122,7 +133,17 @@
         <ul>
           {% for ticker in watchlist %}
           <li>
-            <span>{{ ticker }}</span>
+            <form class="row" method="post" action="/watchlist/replace">
+              <input type="hidden" name="old_ticker" value="{{ ticker }}" />
+              <input
+                type="text"
+                name="new_ticker"
+                value="{{ ticker }}"
+                required
+                autocomplete="off"
+              />
+              <button type="submit">変更</button>
+            </form>
             <form method="post" action="/watchlist/remove">
               <input type="hidden" name="ticker" value="{{ ticker }}" />
               <button class="secondary" type="submit">削除</button>

@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from urllib.parse import quote
 
 from daily_stock_judgment.registry import InstrumentRegistry
 
@@ -26,6 +27,11 @@ def create_app(db_path: Path | None = None) -> FastAPI:
     app = FastAPI(title="日次売買判断")
     app.state.registry = registry
 
+    def _redirect_home(error: str | None = None) -> RedirectResponse:
+        if error:
+            return RedirectResponse(f"/?error={quote(error)}", status_code=303)
+        return RedirectResponse("/", status_code=303)
+
     @app.get("/", response_class=HTMLResponse)
     def index(request: Request) -> HTMLResponse:
         return TEMPLATES.TemplateResponse(
@@ -34,18 +40,36 @@ def create_app(db_path: Path | None = None) -> FastAPI:
             {
                 "watchlist": registry.list_watchlist(),
                 "holdings": registry.list_holdings(),
+                "error": request.query_params.get("error"),
             },
         )
 
     @app.post("/watchlist")
     def add_watchlist(ticker: str = Form(...)) -> RedirectResponse:
-        registry.add_to_watchlist(ticker)
-        return RedirectResponse("/", status_code=303)
+        try:
+            registry.add_to_watchlist(ticker)
+        except ValueError as exc:
+            return _redirect_home(str(exc))
+        return _redirect_home()
 
     @app.post("/watchlist/remove")
     def remove_watchlist(ticker: str = Form(...)) -> RedirectResponse:
-        registry.remove_from_watchlist(ticker)
-        return RedirectResponse("/", status_code=303)
+        try:
+            registry.remove_from_watchlist(ticker)
+        except ValueError as exc:
+            return _redirect_home(str(exc))
+        return _redirect_home()
+
+    @app.post("/watchlist/replace")
+    def replace_watchlist(
+        old_ticker: str = Form(...),
+        new_ticker: str = Form(...),
+    ) -> RedirectResponse:
+        try:
+            registry.replace_watchlist_ticker(old_ticker, new_ticker)
+        except ValueError as exc:
+            return _redirect_home(str(exc))
+        return _redirect_home()
 
     @app.post("/holdings")
     def add_holding(
@@ -57,14 +81,23 @@ def create_app(db_path: Path | None = None) -> FastAPI:
         if raw == "":
             qty = None
         else:
-            qty = float(raw)
-        registry.register_holding(ticker, quantity=qty)
-        return RedirectResponse("/", status_code=303)
+            try:
+                qty = float(raw)
+            except ValueError:
+                return _redirect_home("数量は数値で入力してください")
+        try:
+            registry.register_holding(ticker, quantity=qty)
+        except ValueError as exc:
+            return _redirect_home(str(exc))
+        return _redirect_home()
 
     @app.post("/holdings/remove")
     def remove_holding(ticker: str = Form(...)) -> RedirectResponse:
-        registry.unregister_holding(ticker)
-        return RedirectResponse("/", status_code=303)
+        try:
+            registry.unregister_holding(ticker)
+        except ValueError as exc:
+            return _redirect_home(str(exc))
+        return _redirect_home()
 
     return app
 
