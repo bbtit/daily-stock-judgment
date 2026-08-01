@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>日次売買判断 — ウォッチリスト / 保有</title>
+    <style>
+      :root {
+        --ink: #1c2430;
+        --muted: #5c6b7a;
+        --line: #d5dde6;
+        --bg: #f3f6f8;
+        --card: #ffffff;
+        --accent: #0f6e56;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, #e7f2ee, transparent 40%),
+          linear-gradient(180deg, #eef3f7, var(--bg));
+        min-height: 100vh;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2.5rem 1.25rem 4rem;
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin: 0 0 0.35rem;
+      }
+      .lede {
+        color: var(--muted);
+        margin: 0 0 2rem;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 1.25rem 1.35rem 1.4rem;
+        margin-bottom: 1.25rem;
+      }
+      h2 {
+        font-size: 1.1rem;
+        margin: 0 0 1rem;
+      }
+      form.row {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+      }
+      input[type="text"],
+      input[type="number"] {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0.55rem 0.7rem;
+        font: inherit;
+        min-width: 9rem;
+      }
+      button {
+        border: 0;
+        border-radius: 8px;
+        padding: 0.55rem 0.9rem;
+        font: inherit;
+        background: var(--accent);
+        color: white;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #6b7785;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.65rem 0;
+        border-top: 1px solid var(--line);
+      }
+      li:first-child {
+        border-top: 0;
+      }
+      .empty {
+        color: var(--muted);
+        margin: 0;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>日次売買判断</h1>
+      <p class="lede">ウォッチリストと保有を登録・更新します。</p>
+
+      <section>
+        <h2>ウォッチリスト</h2>
+        <form class="row" method="post" action="/watchlist">
+          <input
+            type="text"
+            name="ticker"
+            placeholder="例: 7203.T"
+            required
+            autocomplete="off"
+          />
+          <button type="submit">追加</button>
+        </form>
+        {% if watchlist %}
+        <ul>
+          {% for ticker in watchlist %}
+          <li>
+            <span>{{ ticker }}</span>
+            <form method="post" action="/watchlist/remove">
+              <input type="hidden" name="ticker" value="{{ ticker }}" />
+              <button class="secondary" type="submit">削除</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty">まだ銘柄がありません。</p>
+        {% endif %}
+      </section>
+
+      <section>
+        <h2>保有</h2>
+        <form class="row" method="post" action="/holdings">
+          <input
+            type="text"
+            name="ticker"
+            placeholder="例: 7203.T"
+            required
+            autocomplete="off"
+          />
+          <input
+            type="number"
+            name="quantity"
+            placeholder="数量（任意）"
+            step="any"
+            min="0"
+          />
+          <button type="submit">登録 / 更新</button>
+        </form>
+        {% if holdings %}
+        <ul>
+          {% for item in holdings %}
+          <li>
+            <span>
+              {{ item.ticker }}
+              {% if item.quantity is not none %}
+              <span class="meta">× {{ item.quantity }}</span>
+              {% endif %}
+            </span>
+            <form method="post" action="/holdings/remove">
+              <input type="hidden" name="ticker" value="{{ item.ticker }}" />
+              <button class="secondary" type="submit">解除</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty">保有はありません。</p>
+        {% endif %}
+      </section>
+    </main>
+  </body>
+</html>
