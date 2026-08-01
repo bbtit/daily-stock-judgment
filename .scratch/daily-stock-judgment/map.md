@@ -24,12 +24,10 @@
 - [大引け後ジョブの時刻と休場日はどうするか](.scratch/daily-stock-judgment/issues/07-after-close-schedule.md) — 手動正・OS自動は任意。推奨16–21時JST。休場は新規判断なし。欠落は再実行可
 - [LLMの入出力スキーマとプロンプト骨子は何か](.scratch/daily-stock-judgment/issues/10-llm-io-schema-prompt.md) — 1銘柄1回。出:{ticker,score,reason} 入:ticker/as_of/holding/bars。指示+JSON。事後検証あり
 - [データ欠落とLLM失敗時の扱いは何か](.scratch/daily-stock-judgment/issues/09-data-and-llm-failure-handling.md) — 部分成功可。データ未着/取得不可/判断失敗。リトライ有、捏造なし
+- [判断履歴の保存・振り返りを仕様にどこまで書くか](.scratch/daily-stock-judgment/issues/11-judgment-history-scope.md) — 成功判断をSQLite保存・無期限。過去日一覧まで。同日は上書き。失敗は残さない
+- [コスト上限の扱いは何か](.scratch/daily-stock-judgment/issues/12-cost-cap-handling.md) — 仕様に上限は書かない。コストはCLI/サブスクの運用任せ
 
 ## Not yet specified
-
-- 判断履歴の保存・振り返りを仕様にどこまで書くか
-- コスト上限の扱い
-- 事後の当たり外れ検証（バックテストやログ評価）を仕様に含めるか
 
 ## Out of scope
 
@@ -40,3 +38,4 @@
 - ニュース・財務・板情報などの非・日足データ
 - 寄り付き前・場中の判断
 - Cloudflare Tunnel / Access — localhost 前提のため不要（[Cloudflare Accessの認証手段は何か](.scratch/daily-stock-judgment/issues/08-cloudflare-access-idp.md)）
+- 事後の当たり外れ検証（バックテスト・勝率集計等）— 判断一覧が目的のため（[事後の当たり外れ検証を仕様に含めるか](.scratch/daily-stock-judgment/issues/13-outcome-evaluation-scope.md)）
