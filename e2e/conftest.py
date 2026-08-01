@@ -40,6 +40,8 @@ def app_url(tmp_path: Path) -> Iterator[str]:
     env = {
         **os.environ,
         "DSJ_DB_PATH": str(db_path),
+        # Fixed judgment day so demo adapters and UI stay deterministic.
+        "DSJ_AS_OF": "2026-07-31",
         "PYTHONPATH": os.pathsep.join(
             [str(SRC), *(p for p in os.environ.get("PYTHONPATH", "").split(os.pathsep) if p)]
         ),

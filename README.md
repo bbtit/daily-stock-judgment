@@ -57,13 +57,18 @@ BASE_URL=http://127.0.0.1:8000 uv run pytest e2e -q
     ├── application/           # ユースケース + ポート（Protocol）
     │   ├── ports.py
     │   ├── manage_instruments.py
+    │   ├── judgment_targets.py
+    │   ├── today_judgments.py
     │   ├── run_daily_judgment.py
     │   └── validate_draft.py
-    ├── infrastructure/        # アダプタ（SQLite / InMemory / テスト用フェイクは tests）
+    ├── infrastructure/        # アダプタ（SQLite / InMemory / デモ。テスト用フェイクは tests）
     │   ├── sqlite_instrument_store.py
     │   ├── memory_instrument_store.py
     │   ├── sqlite_judgment_store.py
-    │   └── memory_judgment_store.py  # InMemoryJudgmentStore
+    │   ├── memory_judgment_store.py  # InMemoryJudgmentStore
+    │   ├── sqlite_day_run_store.py
+    │   ├── memory_day_run_store.py
+    │   └── demo_adapters.py          # yfinance / CLI までの仮実装
     └── presentation/          # FastAPI + テンプレート
         ├── web.py
         └── templates/

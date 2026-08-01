@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>日次売買判断 — ウォッチリスト / 保有</title>
+    <title>日次売買判断</title>
     <style>
       :root {
         --ink: #1c2430;
@@ -107,15 +107,59 @@
         color: var(--muted);
         font-size: 0.9rem;
       }
+      .judgment-row {
+        display: grid;
+        gap: 0.25rem;
+        justify-content: stretch;
+      }
+      .judgment-row strong {
+        font-weight: 600;
+      }
+      .failure-kind {
+        color: #8b1e1e;
+      }
     </style>
   </head>
   <body>
     <main>
       <h1>日次売買判断</h1>
-      <p class="lede">ウォッチリストと保有を登録・更新します。</p>
+      <p class="lede">ウォッチリスト・保有の管理と、今日の判断一覧です。</p>
       {% if error %}
       <p class="error" role="alert">{{ error }}</p>
       {% endif %}
+
+      <section aria-labelledby="today-judgments-heading">
+        <h2 id="today-judgments-heading">今日の判断</h2>
+        <p class="meta">判断日: {{ as_of }}</p>
+        <form
+          class="row"
+          method="post"
+          action="/judgments/run"
+          aria-label="判断ランを実行"
+        >
+          <button type="submit">判断を実行</button>
+        </form>
+        {% if market_closed %}
+        <p class="empty">休場日のため新規判断はありません。</p>
+        {% elif judgment_rows %}
+        <ul aria-label="今日の判断結果">
+          {% for row in judgment_rows %}
+          <li class="judgment-row" aria-label="{{ row.aria_label }}">
+            {% if row.ok %}
+            <strong>{{ row.ticker }}</strong>
+            <span>{{ row.label }} · スコア {{ row.score }}</span>
+            <span class="meta">{{ row.reason }}</span>
+            {% else %}
+            <strong>{{ row.ticker }}</strong>
+            <span class="failure-kind">{{ row.failure_kind }}</span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty">まだ今日の判断はありません。</p>
+        {% endif %}
+      </section>
 
       <section aria-labelledby="watchlist-heading">
         <h2 id="watchlist-heading">ウォッチリスト</h2>

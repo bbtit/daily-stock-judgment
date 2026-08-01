@@ -2,12 +2,26 @@ from __future__ import annotations
 
 import os
 import shutil
+from collections.abc import Callable
+from datetime import date
 from pathlib import Path
 
 from fastapi import FastAPI
 
+from daily_stock_judgment.application.ports import JudgmentModel, MarketDataSource
+from daily_stock_judgment.application.today_judgments import today_clock_tokyo
+from daily_stock_judgment.infrastructure.demo_adapters import (
+    DemoJudgmentModel,
+    DemoMarketData,
+)
+from daily_stock_judgment.infrastructure.sqlite_day_run_store import (
+    SqliteDayRunStore,
+)
 from daily_stock_judgment.infrastructure.sqlite_instrument_store import (
     SqliteInstrumentStore,
+)
+from daily_stock_judgment.infrastructure.sqlite_judgment_store import (
+    SqliteJudgmentStore,
 )
 from daily_stock_judgment.presentation.web import create_app as create_web_app
 
@@ -35,10 +49,26 @@ def prepare_db_path(db_path: Path) -> Path:
     return db_path
 
 
-def create_app(db_path: Path | None = None) -> FastAPI:
+def create_app(
+    db_path: Path | None = None,
+    *,
+    market: MarketDataSource | None = None,
+    model: JudgmentModel | None = None,
+    today: Callable[[], date] | None = None,
+) -> FastAPI:
     resolved = prepare_db_path(db_path or DEFAULT_DB_PATH)
     book = SqliteInstrumentStore(resolved)
-    return create_web_app(book)
+    judgments = SqliteJudgmentStore(resolved)
+    runs = SqliteDayRunStore(resolved)
+    # Demo adapters until tickets 17 (yfinance) and 18 (agent CLI).
+    return create_web_app(
+        book,
+        judgments=judgments,
+        runs=runs,
+        market=market or DemoMarketData(),
+        model=model or DemoJudgmentModel(),
+        today=today or today_clock_tokyo(override=os.environ.get("DSJ_AS_OF")),
+    )
 
 
 app = create_app()

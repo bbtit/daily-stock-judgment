@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import date
 from pathlib import Path
 from urllib.parse import quote
 
@@ -8,7 +10,17 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from daily_stock_judgment.application import manage_instruments as uc
-from daily_stock_judgment.application.ports import InstrumentBook
+from daily_stock_judgment.application.ports import (
+    InstrumentBook,
+    JudgmentBook,
+    JudgmentModel,
+    MarketDataSource,
+)
+from daily_stock_judgment.application.today_judgments import (
+    DayRunStore,
+    load_today_view,
+    run_today_judgments,
+)
 from daily_stock_judgment.domain.result import Err
 
 TEMPLATES = Jinja2Templates(
@@ -16,9 +28,22 @@ TEMPLATES = Jinja2Templates(
 )
 
 
-def create_app(book: InstrumentBook) -> FastAPI:
+def create_app(
+    book: InstrumentBook,
+    *,
+    judgments: JudgmentBook,
+    runs: DayRunStore,
+    market: MarketDataSource,
+    model: JudgmentModel,
+    today: Callable[[], date],
+) -> FastAPI:
     app = FastAPI(title="日次売買判断")
     app.state.book = book
+    app.state.judgments = judgments
+    app.state.runs = runs
+    app.state.market = market
+    app.state.model = model
+    app.state.today = today
 
     def _redirect_home(error: str | None = None) -> RedirectResponse:
         if error:
@@ -27,6 +52,13 @@ def create_app(book: InstrumentBook) -> FastAPI:
 
     @app.get("/", response_class=HTMLResponse)
     def index(request: Request) -> HTMLResponse:
+        as_of = app.state.today()
+        view = load_today_view(
+            as_of=as_of,
+            judgments=judgments,
+            runs=runs,
+            market=app.state.market,
+        )
         return TEMPLATES.TemplateResponse(
             request,
             "index.html",
@@ -34,8 +66,23 @@ def create_app(book: InstrumentBook) -> FastAPI:
                 "watchlist": uc.list_watchlist(book),
                 "holdings": uc.list_holdings(book),
                 "error": request.query_params.get("error"),
+                "as_of": view.as_of.isoformat(),
+                "market_closed": view.market_closed,
+                "judgment_rows": view.rows,
             },
         )
+
+    @app.post("/judgments/run")
+    def run_judgments() -> RedirectResponse:
+        run_today_judgments(
+            as_of=app.state.today(),
+            book=book,
+            judgments=judgments,
+            runs=runs,
+            market=app.state.market,
+            model=app.state.model,
+        )
+        return _redirect_home()
 
     @app.post("/watchlist")
     def add_watchlist(ticker: str = Form(...)) -> RedirectResponse:
