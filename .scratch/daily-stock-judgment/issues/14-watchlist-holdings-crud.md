@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] ウォッチリストに日本株ティッカーを追加・削除できる
 - [x] 保有を登録・解除でき、数量は任意で記録できる
