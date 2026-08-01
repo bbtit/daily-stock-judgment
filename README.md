@@ -14,6 +14,12 @@ uv run daily-stock-judgment
 ブラウザ: http://127.0.0.1:8000  
 SQLite のデフォルト保存先: `data/app.db`
 
+相場は既定で yfinance。オフラインや決定論的なデモが必要なときは:
+
+```bash
+DSJ_MARKET=demo uv run daily-stock-judgment
+```
+
 ### E2E（Playwright）
 
 振る舞いをブラウザ経由で検証する。内部モジュールは import せず、URL とアクセシブル名だけで操作する（将来の FE/BE 分離後も `BASE_URL` を差し替えれば同じスイートを使える）。
@@ -68,7 +74,8 @@ BASE_URL=http://127.0.0.1:8000 uv run pytest e2e -q
     │   ├── memory_judgment_store.py  # InMemoryJudgmentStore
     │   ├── sqlite_day_run_store.py
     │   ├── memory_day_run_store.py
-    │   └── demo_adapters.py          # yfinance / CLI までの仮実装
+    │   ├── yfinance_market.py
+    │   └── demo_adapters.py          # DSJ_MARKET=demo / LLM 仮実装
     └── presentation/          # FastAPI + テンプレート
         ├── web.py
         └── templates/

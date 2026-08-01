@@ -1,6 +1,7 @@
-"""Temporary market/LLM stand-ins until tickets 17 and 18 land.
+"""Deterministic stand-ins for local/E2E.
 
-Deterministic bars and drafts so localhost UI can exercise the runner.
+Market: opt in with DSJ_MARKET=demo (default production market is yfinance).
+LLM: used until ticket 18 wires a real agent CLI adapter.
 """
 
 from __future__ import annotations

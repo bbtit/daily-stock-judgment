@@ -23,6 +23,7 @@ from daily_stock_judgment.infrastructure.sqlite_instrument_store import (
 from daily_stock_judgment.infrastructure.sqlite_judgment_store import (
     SqliteJudgmentStore,
 )
+from daily_stock_judgment.infrastructure.yfinance_market import YFinanceMarketData
 from daily_stock_judgment.presentation.web import create_app as create_web_app
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -60,15 +61,21 @@ def create_app(
     book = SqliteInstrumentStore(resolved)
     judgments = SqliteJudgmentStore(resolved)
     runs = SqliteDayRunStore(resolved)
-    # Demo adapters until tickets 17 (yfinance) and 18 (agent CLI).
     return create_web_app(
         book,
         judgments=judgments,
         runs=runs,
-        market=market or DemoMarketData(),
-        model=model or DemoJudgmentModel(),
+        market=market or _default_market(),
+        model=model or DemoJudgmentModel(),  # real CLI in ticket 18
         today=today or today_clock_tokyo(override=os.environ.get("DSJ_AS_OF")),
     )
+
+
+def _default_market() -> MarketDataSource:
+    # DSJ_MARKET=demo keeps deterministic bars for local/E2E without Yahoo.
+    if os.environ.get("DSJ_MARKET", "yfinance") == "demo":
+        return DemoMarketData()
+    return YFinanceMarketData()
 
 
 app = create_app()
