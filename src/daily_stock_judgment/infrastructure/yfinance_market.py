@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, timedelta
+
+import structlog
 
 from daily_stock_judgment.application.ports import SessionStatus
 from daily_stock_judgment.domain.bar import Bar
@@ -13,7 +14,7 @@ from daily_stock_judgment.domain.judgment import FailureKind
 from daily_stock_judgment.domain.result import Err, Ok, Result
 from daily_stock_judgment.domain.ticker import Ticker
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 # Calendar span long enough to cover ~60 trading days plus holidays.
 _LOOKBACK_CALENDAR_DAYS = 120
@@ -84,27 +85,27 @@ class YFinanceMarketData:
         except Exception as exc:
             # Network/Yahoo faults are not exchange holidays; let per-ticker fetch decide.
             logger.warning(
-                "session probe error as_of=%s probe=%s err=%s; treating as OPEN",
-                as_of.isoformat(),
-                self._session_probe,
-                exc,
+                "session_probe_error",
+                as_of=as_of.isoformat(),
+                probe=self._session_probe,
+                err=str(exc),
             )
             return SessionStatus.OPEN
         if any(row.date == as_of for row in rows):
             logger.info(
-                "session OPEN as_of=%s probe=%s rows=%d",
-                as_of.isoformat(),
-                self._session_probe,
-                len(rows),
+                "yfinance_session_open",
+                as_of=as_of.isoformat(),
+                probe=self._session_probe,
+                rows=len(rows),
             )
             return SessionStatus.OPEN
         last = rows[-1].date.isoformat() if rows else "-"
         logger.info(
-            "session CLOSED as_of=%s probe=%s rows=%d last_bar=%s",
-            as_of.isoformat(),
-            self._session_probe,
-            len(rows),
-            last,
+            "yfinance_session_closed",
+            as_of=as_of.isoformat(),
+            probe=self._session_probe,
+            rows=len(rows),
+            last_bar=last,
         )
         return SessionStatus.CLOSED
 
@@ -115,17 +116,17 @@ class YFinanceMarketData:
             rows = self._fetch_range(ticker.value, as_of)
         except Exception as exc:
             logger.warning(
-                "yfinance fetch error ticker=%s as_of=%s err=%s",
-                ticker.value,
-                as_of.isoformat(),
-                exc,
+                "yfinance_fetch_error",
+                ticker=ticker.value,
+                as_of=as_of.isoformat(),
+                err=str(exc),
             )
             return Err(FailureKind.UNAVAILABLE)
         if not rows:
             logger.warning(
-                "yfinance empty ticker=%s as_of=%s",
-                ticker.value,
-                as_of.isoformat(),
+                "yfinance_empty",
+                ticker=ticker.value,
+                as_of=as_of.isoformat(),
             )
             return Err(FailureKind.UNAVAILABLE)
 
@@ -143,19 +144,19 @@ class YFinanceMarketData:
         )[-_MAX_BARS:]
         if not capped:
             logger.warning(
-                "yfinance no bars <= as_of ticker=%s as_of=%s raw_rows=%d",
-                ticker.value,
-                as_of.isoformat(),
-                len(rows),
+                "yfinance_no_bars",
+                ticker=ticker.value,
+                as_of=as_of.isoformat(),
+                raw_rows=len(rows),
             )
             return Err(FailureKind.UNAVAILABLE)
         if capped[-1].date != as_of:
             logger.info(
-                "yfinance DATA_MISSING ticker=%s as_of=%s last_bar=%s count=%d",
-                ticker.value,
-                as_of.isoformat(),
-                capped[-1].date.isoformat(),
-                len(capped),
+                "yfinance_data_missing",
+                ticker=ticker.value,
+                as_of=as_of.isoformat(),
+                last_bar=capped[-1].date.isoformat(),
+                count=len(capped),
             )
             return Err(FailureKind.DATA_MISSING)
         return Ok(capped)

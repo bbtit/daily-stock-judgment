@@ -28,6 +28,7 @@ DSJ_AGENT_CLI='my-agent --print' uv run daily-stock-judgment
 # 判断日をずらす（未設定時は Asia/Tokyo の本日）
 DSJ_AS_OF=2026-07-31 uv run daily-stock-judgment
 # ログ詳細度（既定 INFO。CLI argv 全文は DEBUG）
+# アプリログは stderr へ JSON Lines。HTTP 中は trace_id 付き（レスポンスヘッダ X-Trace-Id）
 DSJ_LOG_LEVEL=DEBUG uv run daily-stock-judgment
 ```
 

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 from urllib.parse import quote
 
+import structlog
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -23,8 +23,11 @@ from daily_stock_judgment.application.today_judgments import (
     run_today_judgments,
 )
 from daily_stock_judgment.domain.result import Err
+from daily_stock_judgment.presentation.request_context import (
+    RequestContextMiddleware,
+)
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 TEMPLATES = Jinja2Templates(
     directory=str(Path(__file__).resolve().parent / "templates")
@@ -41,6 +44,7 @@ def create_app(
     today: Callable[[], date],
 ) -> FastAPI:
     app = FastAPI(title="日次売買判断")
+    app.add_middleware(RequestContextMiddleware)
     app.state.book = book
     app.state.judgments = judgments
     app.state.runs = runs
@@ -78,7 +82,7 @@ def create_app(
     @app.post("/judgments/run")
     def run_judgments() -> RedirectResponse:
         as_of = app.state.today()
-        logger.info("HTTP POST /judgments/run as_of=%s", as_of.isoformat())
+        logger.info("judgments_run_start", as_of=as_of.isoformat())
         view = run_today_judgments(
             as_of=as_of,
             book=book,
@@ -88,10 +92,10 @@ def create_app(
             model=app.state.model,
         )
         logger.info(
-            "HTTP /judgments/run finished as_of=%s market_closed=%s rows=%d",
-            view.as_of.isoformat(),
-            view.market_closed,
-            len(view.rows),
+            "judgments_run_finished",
+            as_of=view.as_of.isoformat(),
+            market_closed=view.market_closed,
+            rows=len(view.rows),
         )
         return _redirect_home()
 

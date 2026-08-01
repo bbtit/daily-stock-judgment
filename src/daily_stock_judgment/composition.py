@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import logging
 import os
 import shutil
 from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 
+import structlog
 from fastapi import FastAPI
 
 from daily_stock_judgment.application.ports import JudgmentModel, MarketDataSource
@@ -31,7 +31,7 @@ from daily_stock_judgment.infrastructure.yfinance_market import YFinanceMarketDa
 from daily_stock_judgment.logging_config import configure_logging
 from daily_stock_judgment.presentation.web import create_app as create_web_app
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 LEGACY_DB_PATH = (
@@ -73,11 +73,11 @@ def create_app(
     resolved_model = model or _default_model()
     clock = today or today_clock_tokyo(override=os.environ.get("DSJ_AS_OF"))
     logger.info(
-        "app ready db=%s market=%s model=%s as_of=%s",
-        resolved,
-        type(resolved_market).__name__,
-        type(resolved_model).__name__,
-        clock().isoformat(),
+        "app_ready",
+        db=str(resolved),
+        market=type(resolved_market).__name__,
+        model=type(resolved_model).__name__,
+        as_of=clock().isoformat(),
     )
     return create_web_app(
         book,

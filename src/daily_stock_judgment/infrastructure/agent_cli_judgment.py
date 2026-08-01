@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import re
 import shlex
 import subprocess
@@ -12,13 +11,15 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date
 
+import structlog
+
 from daily_stock_judgment.domain.bar import Bar
 from daily_stock_judgment.domain.judgment import FailureKind, JudgmentDraft
 from daily_stock_judgment.domain.result import Err, Ok, Result
 from daily_stock_judgment.domain.ticker import Ticker
 from daily_stock_judgment.infrastructure.agent_prompt import build_prompt
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 _JSON_OBJECT = re.compile(r"\{.*\}", re.DOTALL)
 _PROMPT_LOG_LIMIT = 80
@@ -157,31 +158,30 @@ class AgentCliJudgmentModel:
         argv, embedded = expand_command(self._command, prompt)
         stdin_text = "" if embedded else prompt
         logger.info(
-            "agent CLI start ticker=%s template=%s embedded=%s prompt_chars=%d timeout=%.0fs",
-            ticker.value,
-            shlex.join(self._command),
-            embedded,
-            len(prompt),
-            self._timeout_seconds,
+            "agent_cli_start",
+            ticker=ticker.value,
+            template=shlex.join(self._command),
+            embedded=embedded,
+            prompt_chars=len(prompt),
+            timeout_s=self._timeout_seconds,
         )
         logger.debug(
-            "agent CLI argv ticker=%s %s",
-            ticker.value,
-            _argv_for_log(argv, embedded=embedded),
+            "agent_cli_argv",
+            ticker=ticker.value,
+            argv=_argv_for_log(argv, embedded=embedded),
         )
         started = time.monotonic()
         result = self._run(argv, stdin_text)
         elapsed = time.monotonic() - started
         if result.timed_out or result.exit_code != 0:
             logger.warning(
-                "agent CLI failed ticker=%s exit=%s timed_out=%s elapsed=%.1fs "
-                "stderr=%r stdout=%r",
-                ticker.value,
-                result.exit_code,
-                result.timed_out,
-                elapsed,
-                _clip(result.stderr, 500),
-                _clip(result.stdout, 500),
+                "agent_cli_failed",
+                ticker=ticker.value,
+                exit=result.exit_code,
+                timed_out=result.timed_out,
+                elapsed_s=round(elapsed, 1),
+                stderr=_clip(result.stderr, 500),
+                stdout=_clip(result.stdout, 500),
             )
             return Err(FailureKind.JUDGMENT_FAILED)
         # Some CLIs print diagnostics on stderr; prefer stdout, then combined.
@@ -193,21 +193,20 @@ class AgentCliJudgmentModel:
             )
         if isinstance(parsed, Err):
             logger.warning(
-                "agent CLI parse failed ticker=%s reason=%s elapsed=%.1fs "
-                "stdout=%r stderr=%r",
-                ticker.value,
-                parsed.error,
-                elapsed,
-                _clip(result.stdout, 500),
-                _clip(result.stderr, 500),
+                "agent_cli_parse_failed",
+                ticker=ticker.value,
+                reason=parsed.error,
+                elapsed_s=round(elapsed, 1),
+                stdout=_clip(result.stdout, 500),
+                stderr=_clip(result.stderr, 500),
             )
             return Err(FailureKind.JUDGMENT_FAILED)
         logger.info(
-            "agent CLI ok ticker=%s score=%s elapsed=%.1fs reason=%s",
-            ticker.value,
-            parsed.value.score,
-            elapsed,
-            _clip(parsed.value.reason, 120),
+            "agent_cli_ok",
+            ticker=ticker.value,
+            score=parsed.value.score,
+            elapsed_s=round(elapsed, 1),
+            reason=_clip(parsed.value.reason, 120),
         )
         return Ok(parsed.value)
 

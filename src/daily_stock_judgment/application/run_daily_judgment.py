@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
 from datetime import date
+
+import structlog
 
 from daily_stock_judgment.application.ports import (
     JudgmentBook,
@@ -23,7 +24,7 @@ from daily_stock_judgment.domain.judgment import (
 from daily_stock_judgment.domain.labeling import label_for
 from daily_stock_judgment.domain.result import Err, Ok, Result
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -47,16 +48,16 @@ def run_daily_judgments(
 ) -> DailyRunResult:
     tickers = ",".join(t.ticker.value for t in targets) or "(none)"
     logger.info(
-        "run start as_of=%s targets=%d [%s]",
-        as_of.isoformat(),
-        len(targets),
-        tickers,
+        "run_start",
+        as_of=as_of.isoformat(),
+        targets=len(targets),
+        tickers=tickers,
     )
     status = market.session_status(as_of)
     if status is SessionStatus.CLOSED:
-        logger.info("run skip market_closed as_of=%s", as_of.isoformat())
+        logger.info("run_skip_market_closed", as_of=as_of.isoformat())
         return DailyRunResult(market_closed=True, outcomes=())
-    logger.info("session open as_of=%s", as_of.isoformat())
+    logger.info("session_open", as_of=as_of.isoformat())
 
     outcomes: list[JudgmentOutcome] = []
     for target in targets:
@@ -65,25 +66,25 @@ def run_daily_judgments(
         if isinstance(outcome, SuccessfulJudgment):
             store.upsert(outcome)
             logger.info(
-                "outcome ok ticker=%s score=%s label=%s reason=%s",
-                outcome.ticker.value,
-                outcome.score,
-                outcome.label.value,
-                _clip(outcome.reason, 120),
+                "outcome_ok",
+                ticker=outcome.ticker.value,
+                score=outcome.score,
+                label=outcome.label.value,
+                reason=_clip(outcome.reason, 120),
             )
         else:
             logger.warning(
-                "outcome fail ticker=%s kind=%s",
-                outcome.ticker.value,
-                outcome.kind.value,
+                "outcome_fail",
+                ticker=outcome.ticker.value,
+                kind=outcome.kind.value,
             )
     ok = sum(1 for o in outcomes if isinstance(o, SuccessfulJudgment))
     failed = len(outcomes) - ok
     logger.info(
-        "run done as_of=%s ok=%d failed=%d",
-        as_of.isoformat(),
-        ok,
-        failed,
+        "run_done",
+        as_of=as_of.isoformat(),
+        ok=ok,
+        failed=failed,
     )
     return DailyRunResult(market_closed=False, outcomes=tuple(outcomes))
 
@@ -95,23 +96,27 @@ def _judge_one(
     model: JudgmentModel,
 ) -> JudgmentOutcome:
     holding = "holding" if target.is_holding else "watch"
-    logger.info("judge start ticker=%s role=%s", target.ticker.value, holding)
+    logger.info(
+        "judge_start",
+        ticker=target.ticker.value,
+        role=holding,
+    )
     bars_result = _fetch_bars(market, target.ticker, as_of)
     if isinstance(bars_result, Err):
         logger.warning(
-            "bars fail ticker=%s kind=%s",
-            target.ticker.value,
-            bars_result.error.value,
+            "bars_fail",
+            ticker=target.ticker.value,
+            kind=bars_result.error.value,
         )
         return FailedJudgment(
             ticker=target.ticker, as_of=as_of, kind=bars_result.error
         )
     bars = bars_result.value
     logger.info(
-        "bars ok ticker=%s count=%d last=%s",
-        target.ticker.value,
-        len(bars),
-        bars[-1].date.isoformat() if bars else "-",
+        "bars_ok",
+        ticker=target.ticker.value,
+        count=len(bars),
+        last=bars[-1].date.isoformat() if bars else "-",
     )
 
     draft_result = _draft_with_retries(model, target, as_of, bars)
@@ -143,10 +148,10 @@ def _fetch_bars(
         last = result
         if result.error is FailureKind.DATA_MISSING:
             logger.info(
-                "bars retry ticker=%s attempt=%d kind=%s",
-                ticker.value,
-                attempt + 1,
-                result.error.value,
+                "bars_retry",
+                ticker=ticker.value,
+                attempt=attempt + 1,
+                kind=result.error.value,
             )
         if result.error is not FailureKind.DATA_MISSING:
             return result
@@ -170,16 +175,16 @@ def _draft_with_retries(
         if isinstance(raw, Err):
             if call_failures >= _MODEL_CALL_RETRIES:
                 logger.warning(
-                    "model exhausted ticker=%s call_failures=%d",
-                    target.ticker.value,
-                    call_failures + 1,
+                    "model_exhausted",
+                    ticker=target.ticker.value,
+                    call_failures=call_failures + 1,
                 )
                 return Err(FailureKind.JUDGMENT_FAILED)
             call_failures += 1
             logger.info(
-                "model retry ticker=%s call_failures=%d",
-                target.ticker.value,
-                call_failures,
+                "model_retry",
+                ticker=target.ticker.value,
+                call_failures=call_failures,
             )
             continue
 
@@ -188,17 +193,17 @@ def _draft_with_retries(
             return checked
         if validation_failures >= _DRAFT_REGENERATE:
             logger.warning(
-                "draft validation exhausted ticker=%s score=%s reason=%s",
-                target.ticker.value,
-                raw.value.score,
-                _clip(raw.value.reason, 120),
+                "draft_validation_exhausted",
+                ticker=target.ticker.value,
+                score=raw.value.score,
+                reason=_clip(raw.value.reason, 120),
             )
             return Err(FailureKind.JUDGMENT_FAILED)
         validation_failures += 1
         logger.info(
-            "draft regenerate ticker=%s validation_failures=%d",
-            target.ticker.value,
-            validation_failures,
+            "draft_regenerate",
+            ticker=target.ticker.value,
+            validation_failures=validation_failures,
         )
 
 
