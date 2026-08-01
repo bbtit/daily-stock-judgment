@@ -44,8 +44,8 @@ composition（配線のみ）
 
 テストと差し替えの主 seam は **アプリケーションユースケース + ポート**。
 
-- 現状: `InstrumentBook` + `manage_instruments`
-- 将来: 日次判断ランナー用ポート（相場取得・エージェント CLI）を同様に切る
+- 銘柄台帳: `InstrumentBook` + `manage_instruments`
+- 日次判断ランナー: `run_daily_judgments` + `MarketDataSource` / `JudgmentModel` / `JudgmentBook`（テストはフェイク差し替え）
 
 ## Testing
 

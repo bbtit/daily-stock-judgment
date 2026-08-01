@@ -50,13 +50,20 @@ BASE_URL=http://127.0.0.1:8000 uv run pytest e2e -q
     │   ├── ticker.py
     │   ├── holding.py
     │   ├── watchlist.py
+    │   ├── bar.py
+    │   ├── judgment.py
+    │   ├── labeling.py
     │   └── result.py
     ├── application/           # ユースケース + ポート（Protocol）
     │   ├── ports.py
-    │   └── manage_instruments.py
-    ├── infrastructure/        # アダプタ（SQLite / InMemory）
+    │   ├── manage_instruments.py
+    │   ├── run_daily_judgment.py
+    │   └── validate_draft.py
+    ├── infrastructure/        # アダプタ（SQLite / InMemory / テスト用フェイクは tests）
     │   ├── sqlite_instrument_store.py
-    │   └── memory_instrument_store.py
+    │   ├── memory_instrument_store.py
+    │   ├── sqlite_judgment_store.py
+    │   └── memory_judgment_store.py  # InMemoryJudgmentStore
     └── presentation/          # FastAPI + テンプレート
         ├── web.py
         └── templates/

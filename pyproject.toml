@@ -35,7 +35,7 @@ default-groups = ["dev"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 markers = [
   "e2e: browser end-to-end tests (Playwright)",
 ]
