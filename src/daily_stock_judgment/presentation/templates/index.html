@@ -4,134 +4,347 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>日次売買判断</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
-        --ink: #1c2430;
-        --muted: #5c6b7a;
-        --line: #d5dde6;
-        --bg: #f3f6f8;
-        --card: #ffffff;
-        --accent: #0f6e56;
+        --bg-deep: #0c0e12;
+        --bg: #12151b;
+        --surface: #181c24;
+        --surface-raised: #1e2430;
+        --surface-hover: #252b38;
+        --ink: #e8eaef;
+        --ink-soft: #b4bac6;
+        --muted: #6d7484;
+        --muted-dim: #4a5060;
+        --accent: #d8dde8;
+        --accent-ink: #c5cbd6;
+        --danger: #e07070;
+        --danger-soft: rgba(224, 112, 112, 0.12);
+        --focus: rgba(180, 190, 210, 0.35);
+        --radius: 14px;
+        --radius-sm: 10px;
+        --radius-pill: 999px;
       }
+
       * {
         box-sizing: border-box;
       }
+
       body {
         margin: 0;
-        font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+        font-family: "IBM Plex Sans JP", sans-serif;
         color: var(--ink);
         background:
-          radial-gradient(circle at top left, #e7f2ee, transparent 40%),
-          linear-gradient(180deg, #eef3f7, var(--bg));
+          radial-gradient(ellipse 80% 50% at 15% -10%, #1a2030 0%, transparent 55%),
+          radial-gradient(ellipse 60% 40% at 95% 5%, #161820 0%, transparent 50%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
+        background-attachment: fixed;
         min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
       }
+
       main {
         max-width: 720px;
         margin: 0 auto;
-        padding: 2.5rem 1.25rem 4rem;
+        padding: 2.75rem 1.25rem 5rem;
+        animation: rise-in 0.45s ease-out both;
       }
+
+      @keyframes rise-in {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes surface-in {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .brand {
+        margin: 0 0 2.25rem;
+      }
+
       h1 {
-        font-size: 1.6rem;
-        margin: 0 0 0.35rem;
+        font-size: 1.55rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin: 0 0 0.4rem;
+        color: var(--ink);
       }
+
       .lede {
         color: var(--muted);
-        margin: 0 0 2rem;
+        margin: 0;
+        font-size: 0.95rem;
+        line-height: 1.5;
       }
+
       .error {
-        color: #8b1e1e;
-        background: #fdecec;
-        border: 1px solid #f0c2c2;
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
+        color: var(--danger);
+        background: var(--danger-soft);
+        border-radius: var(--radius-sm);
+        padding: 0.8rem 1rem;
         margin: 0 0 1.25rem;
+        font-size: 0.92rem;
       }
+
       section {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 1.25rem 1.35rem 1.4rem;
-        margin-bottom: 1.25rem;
+        background: var(--surface);
+        border-radius: var(--radius);
+        padding: 1.35rem 1.4rem 1.5rem;
+        margin-bottom: 0.85rem;
+        animation: surface-in 0.4s ease-out both;
       }
+
+      section:nth-of-type(1) {
+        animation-delay: 0.04s;
+      }
+      section:nth-of-type(2) {
+        animation-delay: 0.08s;
+      }
+      section:nth-of-type(3) {
+        animation-delay: 0.12s;
+      }
+      section:nth-of-type(4) {
+        animation-delay: 0.16s;
+      }
+
       h2 {
-        font-size: 1.1rem;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
         margin: 0 0 1rem;
       }
+
       form.row {
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
+        align-items: flex-end;
         margin-bottom: 1rem;
       }
+
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
       input[type="text"],
       input[type="number"],
       select {
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 0.55rem 0.7rem;
+        border: 0;
+        border-radius: var(--radius-sm);
+        padding: 0.6rem 0.85rem;
         font: inherit;
         min-width: 9rem;
+        color: var(--ink);
+        background: var(--surface-raised);
+        transition: background 0.15s ease, box-shadow 0.15s ease;
       }
+
+      input::placeholder {
+        color: var(--muted-dim);
+      }
+
+      input:hover,
+      select:hover {
+        background: var(--surface-hover);
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--focus);
+        background: var(--surface-hover);
+      }
+
+      select {
+        appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+          linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+        background-position:
+          calc(100% - 16px) calc(50% - 2px),
+          calc(100% - 11px) calc(50% - 2px);
+        background-size: 5px 5px, 5px 5px;
+        background-repeat: no-repeat;
+        padding-right: 2rem;
+      }
+
+      select option {
+        background: var(--surface-raised);
+        color: var(--ink);
+      }
+
       button {
         border: 0;
-        border-radius: 8px;
-        padding: 0.55rem 0.9rem;
+        border-radius: var(--radius-pill);
+        padding: 0.55rem 1.05rem;
         font: inherit;
+        font-weight: 500;
+        font-size: 0.9rem;
         background: var(--accent);
-        color: white;
+        color: #0c0e12;
         cursor: pointer;
+        transition: transform 0.12s ease, filter 0.15s ease, background 0.15s ease;
       }
+
+      button:hover {
+        filter: brightness(1.08);
+      }
+
+      button:active {
+        transform: scale(0.97);
+      }
+
+      button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus);
+      }
+
       button.secondary {
-        background: #6b7785;
+        background: var(--surface-raised);
+        color: var(--ink-soft);
       }
+
+      button.secondary:hover {
+        background: var(--surface-hover);
+        filter: none;
+      }
+
       ul {
         list-style: none;
         padding: 0;
         margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
       }
+
       li {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 0.75rem;
-        padding: 0.65rem 0;
-        border-top: 1px solid var(--line);
+        padding: 0.85rem 1rem;
+        background: var(--surface-raised);
+        border-radius: var(--radius-sm);
+        transition: background 0.15s ease;
       }
-      li:first-child {
-        border-top: 0;
+
+      li:hover {
+        background: var(--surface-hover);
       }
+
+      li form.row,
+      li .row {
+        margin-bottom: 0;
+      }
+
       .empty {
         color: var(--muted);
         margin: 0;
+        font-size: 0.92rem;
       }
+
       .meta {
         color: var(--muted);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        line-height: 1.45;
       }
+
+      .date-chip {
+        display: inline-block;
+        color: var(--ink-soft);
+        background: var(--surface-raised);
+        border-radius: var(--radius-pill);
+        padding: 0.2rem 0.65rem;
+        font-size: 0.8rem;
+        margin: 0 0 1rem;
+      }
+
       .judgment-row {
         display: grid;
-        gap: 0.25rem;
+        gap: 0.3rem;
         justify-content: stretch;
       }
+
       .judgment-row strong {
         font-weight: 600;
+        letter-spacing: 0.01em;
       }
+
+      .judgment-summary {
+        color: var(--accent-ink);
+        font-size: 0.9rem;
+      }
+
       .failure-kind {
-        color: #8b1e1e;
+        color: var(--danger);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 560px) {
+        main {
+          padding: 1.75rem 1rem 4rem;
+        }
+
+        li {
+          flex-wrap: wrap;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+          min-width: 0;
+          flex: 1 1 8rem;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
       }
     </style>
   </head>
   <body>
     <main>
-      <h1>日次売買判断</h1>
-      <p class="lede">ウォッチリスト・保有の管理と、判断一覧です。</p>
+      <header class="brand">
+        <h1>日次売買判断</h1>
+        <p class="lede">ウォッチリスト・保有の管理と、判断一覧です。</p>
+      </header>
       {% if error %}
       <p class="error" role="alert">{{ error }}</p>
       {% endif %}
 
       <section aria-labelledby="today-judgments-heading">
         <h2 id="today-judgments-heading">今日の判断</h2>
-        <p class="meta">判断日: {{ as_of }}</p>
+        <p class="date-chip">判断日: {{ as_of }}</p>
         <form
           class="row"
           method="post"
@@ -148,7 +361,7 @@
           <li class="judgment-row" aria-label="{{ row.aria_label }}">
             {% if row.ok %}
             <strong>{{ row.ticker }}</strong>
-            <span>{{ row.label }} · スコア {{ row.score }}</span>
+            <span class="judgment-summary">{{ row.label }} · スコア {{ row.score }}</span>
             <span class="meta">{{ row.reason }}</span>
             {% else %}
             <strong>{{ row.ticker }}</strong>
@@ -192,7 +405,7 @@
           {% for row in history_rows %}
           <li class="judgment-row" aria-label="{{ row.aria_label }}">
             <strong>{{ row.ticker }}</strong>
-            <span>{{ row.label }} · スコア {{ row.score }}</span>
+            <span class="judgment-summary">{{ row.label }} · スコア {{ row.score }}</span>
             <span class="meta">{{ row.reason }}</span>
           </li>
           {% endfor %}
@@ -229,23 +442,7 @@
         <ul aria-label="ウォッチリストの銘柄">
           {% for ticker in watchlist %}
           <li>
-            <form
-              class="row"
-              method="post"
-              action="/watchlist/replace"
-              aria-label="ウォッチリストの銘柄を変更"
-            >
-              <input type="hidden" name="old_ticker" value="{{ ticker.value }}" />
-              <input
-                type="text"
-                name="new_ticker"
-                aria-label="変更後のティッカー"
-                value="{{ ticker.value }}"
-                required
-                autocomplete="off"
-              />
-              <button type="submit">変更</button>
-            </form>
+            <span>{{ ticker.value }}</span>
             <form
               method="post"
               action="/watchlist/remove"

@@ -131,16 +131,6 @@ def create_app(
             return _redirect_home(result.error)
         return _redirect_home()
 
-    @app.post("/watchlist/replace")
-    def replace_watchlist(
-        old_ticker: str = Form(...),
-        new_ticker: str = Form(...),
-    ) -> RedirectResponse:
-        result = uc.replace_watchlist_ticker(book, old_ticker, new_ticker)
-        if isinstance(result, Err):
-            return _redirect_home(result.error)
-        return _redirect_home()
-
     @app.post("/holdings")
     def add_holding(
         ticker: str = Form(...),

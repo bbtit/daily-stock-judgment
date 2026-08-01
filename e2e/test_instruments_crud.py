@@ -33,24 +33,7 @@ def test_ウォッチリストにティッカーを追加したとき一覧に�
     add.get_by_role("button", name="追加").click()
 
     watchlist = page.get_by_role("list", name="ウォッチリストの銘柄")
-    expect(watchlist.get_by_label("変更後のティッカー")).to_have_value("7203.T")
-
-
-def test_ウォッチリストのティッカーを変更したとき新しい値に置き換わる(
-    page: Page, app_url: str
-) -> None:
-    page.goto(f"{app_url}/")
-
-    add = page.get_by_role("form", name="ウォッチリストに追加")
-    add.get_by_label("ウォッチリストのティッカー").fill("7203.T")
-    add.get_by_role("button", name="追加").click()
-
-    replace = page.get_by_role("form", name="ウォッチリストの銘柄を変更")
-    replace.get_by_label("変更後のティッカー").fill("9984.T")
-    replace.get_by_role("button", name="変更").click()
-
-    watchlist = page.get_by_role("list", name="ウォッチリストの銘柄")
-    expect(watchlist.get_by_label("変更後のティッカー")).to_have_value("9984.T")
+    expect(watchlist).to_contain_text("7203.T")
 
 
 def test_ウォッチリストから削除したとき空状態に戻る(
