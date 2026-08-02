@@ -69,7 +69,7 @@ def test_保有数量の矢印で100と0を行き来できる(
     expect(quantity).to_have_value("100")
 
 
-def test_保有を数量付きで登録したとき一覧にティッカーと数量が表示される(
+def test_保有を登録したとき一覧にティッカー数量取得日単価が表示される(
     page: Page, app_url: str
 ) -> None:
     page.goto(f"{app_url}/")
@@ -77,11 +77,15 @@ def test_保有を数量付きで登録したとき一覧にティッカーと�
     form = page.get_by_role("form", name="保有を登録")
     form.get_by_label("保有のティッカー").fill("8035.T")
     form.get_by_label("保有数量").fill("100")
+    form.get_by_label("1株あたり単価").fill("2500")
+    form.get_by_label("取得日").fill("2026-07-31")
     form.get_by_role("button", name="登録 / 更新").click()
 
     holdings = page.get_by_role("list", name="保有銘柄")
     expect(holdings).to_contain_text("8035.T")
     expect(holdings).to_contain_text("100")
+    expect(holdings).to_contain_text("2500円")
+    expect(holdings).to_contain_text("2026-07-31")
 
 
 def test_保有を解除したとき空状態に戻る(page: Page, app_url: str) -> None:
@@ -90,6 +94,8 @@ def test_保有を解除したとき空状態に戻る(page: Page, app_url: str)
     form = page.get_by_role("form", name="保有を登録")
     form.get_by_label("保有のティッカー").fill("8035.T")
     form.get_by_label("保有数量").fill("100")
+    form.get_by_label("1株あたり単価").fill("2500")
+    form.get_by_label("取得日").fill("2026-07-31")
     form.get_by_role("button", name="登録 / 更新").click()
 
     page.get_by_role("form", name="保有を解除").get_by_role(

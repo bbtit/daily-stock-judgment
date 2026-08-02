@@ -145,6 +145,7 @@
 
       input[type="text"],
       input[type="number"],
+      input[type="date"],
       select {
         border: 0;
         border-radius: var(--radius-sm);
@@ -414,6 +415,7 @@
 
         input[type="text"],
         input[type="number"],
+        input[type="date"],
         select {
           min-width: 0;
           flex: 1 1 8rem;
@@ -628,6 +630,21 @@
               </button>
             </div>
           </div>
+          <input
+            type="number"
+            name="unit_cost"
+            aria-label="1株あたり単価"
+            placeholder="単価"
+            step="0.01"
+            min="0.01"
+            required
+          />
+          <input
+            type="date"
+            name="purchase_date"
+            aria-label="取得日"
+            required
+          />
           <button type="submit" aria-label="登録 / 更新">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M20 6 9 17l-5-5" />
@@ -641,6 +658,8 @@
             <span>
               <span class="ticker">{{ item.ticker.value }}</span>
               <span class="meta">× {{ item.quantity }}</span>
+              <span class="meta">@ {{ "%g"|format(item.unit_cost) }}円</span>
+              <span class="meta">{{ item.purchase_date.isoformat() }} 取得</span>
             </span>
             <form
               method="post"

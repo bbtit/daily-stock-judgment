@@ -139,6 +139,8 @@ def create_app(
     def add_holding(
         ticker: str = Form(...),
         quantity: str = Form(""),
+        purchase_date: str = Form(""),
+        unit_cost: str = Form(""),
     ) -> RedirectResponse:
         raw = quantity.strip()
         if raw == "":
@@ -147,7 +149,30 @@ def create_app(
             qty = int(raw)
         except ValueError:
             return _redirect_home("数量は整数で入力してください")
-        result = uc.register_holding(book, ticker, quantity=qty)
+
+        raw_date = purchase_date.strip()
+        if raw_date == "":
+            return _redirect_home("取得日を入力してください")
+        try:
+            parsed_date = date.fromisoformat(raw_date)
+        except ValueError:
+            return _redirect_home("取得日は日付で入力してください")
+
+        raw_cost = unit_cost.strip()
+        if raw_cost == "":
+            return _redirect_home("単価を入力してください")
+        try:
+            parsed_cost = float(raw_cost)
+        except ValueError:
+            return _redirect_home("単価は数値で入力してください")
+
+        result = uc.register_holding(
+            book,
+            ticker,
+            quantity=qty,
+            purchase_date=parsed_date,
+            unit_cost=parsed_cost,
+        )
         if isinstance(result, Err):
             return _redirect_home(result.error)
         return _redirect_home()
