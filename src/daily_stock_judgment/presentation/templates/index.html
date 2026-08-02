@@ -7,6 +7,7 @@
     <title>日次売買判断</title>
     <style>
       :root {
+        color-scheme: dark;
         --bg: #141414;
         --surface: #181818;
         --ink: #f0f0f0;
@@ -167,6 +168,12 @@
 
       input::placeholder {
         color: var(--icon);
+      }
+
+      input[type="number"]::-webkit-inner-spin-button,
+      input[type="number"]::-webkit-outer-spin-button {
+        opacity: 0.55;
+        filter: brightness(0.7);
       }
 
       input:focus,
@@ -536,7 +543,7 @@
             name="quantity"
             aria-label="保有数量"
             placeholder="数量（任意）"
-            step="any"
+            step="100"
             min="0"
           />
           <button type="submit" aria-label="登録 / 更新">
