@@ -17,6 +17,11 @@ SQLite のデフォルト保存先: `data/app.db`（パスは `DSJ_DB_PATH` で�
 スキーマは Alembic 管理。起動時に未適用マイグレーションを自動適用する。CLI 例:
 
 ```bash
+# 適用済み revision（head なら最新）
+uv run alembic current
+uv run alembic history
+# または: sqlite3 data/app.db "SELECT version_num FROM alembic_version;"
+
 uv run alembic upgrade head
 uv run alembic downgrade -1
 uv run alembic revision --autogenerate -m "describe change"  # 必ず人手レビュー
