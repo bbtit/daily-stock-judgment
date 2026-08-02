@@ -10,6 +10,8 @@ dependencies = [
   "python-multipart>=0.0.12",
   "yfinance>=0.2.40",
   "structlog>=25.5.0",
+  "sqlalchemy>=2.0.51",
+  "alembic>=1.16.5",
 ]
 
 [project.scripts]

@@ -27,6 +27,7 @@ from daily_stock_judgment.infrastructure.sqlite_instrument_store import (
 from daily_stock_judgment.infrastructure.sqlite_judgment_store import (
     SqliteJudgmentStore,
 )
+from daily_stock_judgment.infrastructure.sqlite_migrate import upgrade_to_head
 from daily_stock_judgment.infrastructure.yfinance_market import YFinanceMarketData
 from daily_stock_judgment.logging_config import configure_logging
 from daily_stock_judgment.presentation.web import create_app as create_web_app
@@ -66,6 +67,7 @@ def create_app(
 ) -> FastAPI:
     configure_logging()
     resolved = prepare_db_path(db_path or DEFAULT_DB_PATH)
+    upgrade_to_head(resolved)
     book = SqliteInstrumentStore(resolved)
     judgments = SqliteJudgmentStore(resolved)
     runs = SqliteDayRunStore(resolved)

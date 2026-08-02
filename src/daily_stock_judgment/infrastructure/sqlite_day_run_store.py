@@ -20,25 +20,11 @@ class SqliteDayRunStore:
 
     def __init__(self, db_path: Path) -> None:
         self._db_path = Path(db_path)
-        self._db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._init_schema()
 
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self._db_path)
         conn.row_factory = sqlite3.Row
         return conn
-
-    def _init_schema(self) -> None:
-        with self._connect() as conn:
-            conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS day_runs (
-                    as_of TEXT PRIMARY KEY,
-                    market_closed INTEGER NOT NULL,
-                    outcomes_json TEXT NOT NULL
-                )
-                """
-            )
 
     def save(self, as_of: date, result: DailyRunResult) -> None:
         payload = [_outcome_to_dict(o) for o in result.outcomes]

@@ -13,27 +13,11 @@ class SqliteInstrumentStore:
 
     def __init__(self, db_path: Path) -> None:
         self._db_path = Path(db_path)
-        self._db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._init_schema()
 
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self._db_path)
         conn.row_factory = sqlite3.Row
         return conn
-
-    def _init_schema(self) -> None:
-        with self._connect() as conn:
-            conn.executescript(
-                """
-                CREATE TABLE IF NOT EXISTS watchlist (
-                    ticker TEXT PRIMARY KEY COLLATE NOCASE
-                );
-                CREATE TABLE IF NOT EXISTS holdings (
-                    ticker TEXT PRIMARY KEY COLLATE NOCASE,
-                    quantity REAL
-                );
-                """
-            )
 
     def list_watchlist(self) -> tuple[Ticker, ...]:
         with self._connect() as conn:

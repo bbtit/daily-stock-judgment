@@ -16,7 +16,7 @@ SQLite スキーマ変更の運用が決まっていること。Alembic を前�
   - スキーマの正本は **Alembic revision のみ**。ストアの `CREATE TABLE IF NOT EXISTS` は外す。
   - 既存 DB はデータ維持で **baseline + stamp**。
   - SQLAlchemy は **MetaData / テーブル定義のみ**。読み書きは当面 `sqlite3` のまま。
-  - **upgrade↔downgrade 往復**を自動テストする。
+  - **migrate 後にアプリが使えること**を自動テスト（空一時 DB → `create_app` → スキーマ＋軽い読み書き）。downgrade 自動テストはしない。
 - このマップは計画まで。文書化・実装は道が晴れてから別作業。
 - Issue tracker: local markdown（`.scratch/`）。
 
@@ -25,6 +25,11 @@ SQLite スキーマ変更の運用が決まっていること。Alembic を前�
 <!-- the index — one line per closed ticket: enough to judge relevance, then zoom the link for the detail the ticket holds -->
 
 - [AlembicをMetaData-onlyで組む公式な構成は何か](.scratch/sqlite-schema-migrations/issues/01-alembic-metadata-only-layout.md) — Core MetaData を env.py の target_metadata に渡し、SQLite は render_as_batch=True、URL は DSJ_DB_PATH から組み立て、autogenerate は人手レビュー必須
+- [MetaData定義の置き場所はどこか](.scratch/sqlite-schema-migrations/issues/02-metadata-placement.md) — `infrastructure/schema.py` に MetaData 1つ・全テーブル。infrastructure 専用。履歴は versions/
+- [ベースラインに載せる現行スキーマは何か](.scratch/sqlite-schema-migrations/issues/03-baseline-schema-inventory.md) — 4テーブル（watchlist/holdings/judgments/day_runs）。app.db は一致＋孤児 schema_migrations のみ
+- [既存app.dbのstamp手順と一致確認はどうするか](.scratch/sqlite-schema-migrations/issues/04-stamp-existing-db.md) — 目視突合→孤児DROP→stamp head。不一致は停止して直す。stampは初回のみ
+- [起動時upgradeとCLIの形はどうするか](.scratch/sqlite-schema-migrations/issues/05-startup-and-cli-surface.md) — create_app で upgrade（ストア前）。CLI は uv run alembic 直。ラッパなし
+- [往復テストの置き場所と最小範囲は何か](.scratch/sqlite-schema-migrations/issues/06-migration-roundtrip-tests.md) — test_alembic_migrations.py。create_app 後のスキーマ＋読み書きのみ。downgrade自動なし
 
 ## Not yet specified
 

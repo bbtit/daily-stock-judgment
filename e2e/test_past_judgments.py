@@ -27,21 +27,17 @@ def _free_port() -> int:
 
 
 def _seed_past_judgment(db_path: Path) -> None:
-    """Seed via SQL only — no application package imports."""
+    """Seed via Alembic CLI + SQL — no application package imports."""
     db_path.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
+        cwd=PROJECT_ROOT,
+        env={**os.environ, "DSJ_DB_PATH": str(db_path)},
+        check=True,
+        capture_output=True,
+        text=True,
+    )
     with sqlite3.connect(db_path) as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS judgments (
-                ticker TEXT NOT NULL COLLATE NOCASE,
-                as_of TEXT NOT NULL,
-                score INTEGER NOT NULL,
-                label TEXT NOT NULL,
-                reason TEXT NOT NULL,
-                PRIMARY KEY (ticker, as_of)
-            )
-            """
-        )
         conn.execute(
             """
             INSERT INTO judgments (ticker, as_of, score, label, reason)

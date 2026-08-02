@@ -8,6 +8,7 @@ from daily_stock_judgment.domain.ticker import Ticker
 from daily_stock_judgment.infrastructure.sqlite_judgment_store import (
     SqliteJudgmentStore,
 )
+from daily_stock_judgment.infrastructure.sqlite_migrate import upgrade_to_head
 
 AS_OF = date(2026, 7, 31)
 
@@ -16,6 +17,7 @@ def test_ストアを開き直したとき成功判断が残り同日上書き�
     tmp_path: Path,
 ) -> None:
     db_path = tmp_path / "app.db"
+    upgrade_to_head(db_path)
     first = SqliteJudgmentStore(db_path)
     first.upsert(
         SuccessfulJudgment(
@@ -46,6 +48,7 @@ def test_ストアを開き直したとき成功判断が残り同日上書き�
 
 def test_ストアを開き直したとき判断日一覧が新しい順で残る(tmp_path: Path) -> None:
     db_path = tmp_path / "app.db"
+    upgrade_to_head(db_path)
     store = SqliteJudgmentStore(db_path)
     older = date(2026, 7, 29)
     newer = date(2026, 7, 30)

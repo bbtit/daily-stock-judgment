@@ -72,7 +72,9 @@ composition（配線のみ）
 
 - 正本はプロジェクトローカルの SQLite（デフォルト `data/app.db`）
 - 上書きパスは環境変数 `DSJ_DB_PATH`
-- スキーマ詳細はインフラの関心事。ドメインは `Ticker` / `Holding` などとしてだけ知る
+- スキーマの正本は Alembic revision（`alembic/versions/`）。起動時（`create_app`）に未適用分を `upgrade head`。失敗したら起動しない
+- 目標スキーマは infrastructure の Core `MetaData`（SQLAlchemy）。読み書きは当面 `sqlite3` ストア
+- ドメインは `Ticker` / `Holding` などとしてだけ知る。CLI 操作は `uv run alembic …`（`DSJ_DB_PATH` 対応）
 
 ## Out of scope for this document
 

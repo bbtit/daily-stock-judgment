@@ -12,7 +12,17 @@ uv run daily-stock-judgment
 ```
 
 ブラウザ: http://127.0.0.1:8000  
-SQLite のデフォルト保存先: `data/app.db`
+SQLite のデフォルト保存先: `data/app.db`（パスは `DSJ_DB_PATH` で上書き可）
+
+スキーマは Alembic 管理。起動時に未適用マイグレーションを自動適用する。CLI 例:
+
+```bash
+uv run alembic upgrade head
+uv run alembic downgrade -1
+uv run alembic revision --autogenerate -m "describe change"  # 必ず人手レビュー
+# 既存 DB を初めて載せるとき（データ保持）: .schema を確認 → 孤児 schema_migrations があれば DROP →
+# DSJ_DB_PATH=... uv run alembic stamp head
+```
 
 相場は既定で yfinance。判断 LLM は `DSJ_AGENT_CLI` で指定したローカルエージェント CLI（stdin にプロンプト、stdout に JSON）。未設定時はデモ LLM。
 
@@ -75,6 +85,8 @@ pnpm dlx @lhci/cli autorun
 ├── pyproject.toml
 ├── uv.lock
 ├── .python-version
+├── alembic/                   # マイグレーション（versions がスキーマ正本）
+├── alembic.ini
 ├── data/                      # ローカル SQLite（*.db は gitignore）
 ├── tests/                     # ユースケース seam + SQLite 永続化 + Web
 ├── e2e/                       # Playwright（ブラウザ振る舞い）
