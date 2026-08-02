@@ -55,7 +55,7 @@ class SqliteInstrumentStore:
                 "SELECT ticker, quantity FROM holdings ORDER BY ticker"
             ).fetchall()
         return tuple(
-            Holding(ticker=Ticker(row["ticker"]), quantity=row["quantity"])
+            Holding(ticker=Ticker(row["ticker"]), quantity=int(row["quantity"]))
             for row in rows
         )
 

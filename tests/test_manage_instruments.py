@@ -48,16 +48,27 @@ def test_日本株以外のティッカーを追加しようとしたときエ�
     assert "7203.T" in result.error
 
 
-def test_保有を数量ありとなしで登録したとき両方とも一覧に並ぶ() -> None:
+def test_保有を登録したとき一覧にティッカーと数量が並ぶ() -> None:
     book = InMemoryInstrumentStore()
 
     uc.register_holding(book, "7203.T", quantity=100)
-    uc.register_holding(book, "6758.T")
+    uc.register_holding(book, "6758.T", quantity=200)
 
     assert uc.list_holdings(book) == (
-        Holding(ticker=Ticker("6758.T"), quantity=None),
-        Holding(ticker=Ticker("7203.T"), quantity=100.0),
+        Holding(ticker=Ticker("6758.T"), quantity=200),
+        Holding(ticker=Ticker("7203.T"), quantity=100),
     )
+
+
+def test_数量が0以下で保有を登録しようとしたときエラーになる() -> None:
+    book = InMemoryInstrumentStore()
+
+    for qty in (0, -1):
+        result = uc.register_holding(book, "7203.T", quantity=qty)
+        assert isinstance(result, Err)
+        assert "quantity" in result.error
+
+    assert uc.list_holdings(book) == ()
 
 
 def test_保有を解除したとき一覧が空になる() -> None:
@@ -77,5 +88,5 @@ def test_同じ銘柄の保有を再登録したとき数量が上書きされ�
     uc.register_holding(book, "7203.T", quantity=20)
 
     assert uc.list_holdings(book) == (
-        Holding(ticker=Ticker("7203.T"), quantity=20.0),
+        Holding(ticker=Ticker("7203.T"), quantity=20),
     )

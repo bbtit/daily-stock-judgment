@@ -51,6 +51,24 @@ def test_ウォッチリストから削除したとき空状態に戻る(
     expect(page.get_by_text("まだ銘柄がありません。")).to_be_visible()
 
 
+def test_保有数量の矢印で100と0を行き来できる(
+    page: Page, app_url: str
+) -> None:
+    page.goto(f"{app_url}/")
+
+    form = page.get_by_role("form", name="保有を登録")
+    quantity = form.get_by_label("保有数量")
+
+    form.get_by_role("button", name="数量を100増やす").click()
+    expect(quantity).to_have_value("100")
+
+    form.get_by_role("button", name="数量を100減らす").click()
+    expect(quantity).to_have_value("0")
+
+    form.get_by_role("button", name="数量を100増やす").click()
+    expect(quantity).to_have_value("100")
+
+
 def test_保有を数量付きで登録したとき一覧にティッカーと数量が表示される(
     page: Page, app_url: str
 ) -> None:

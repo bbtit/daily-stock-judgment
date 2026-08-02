@@ -48,7 +48,7 @@ def list_holdings(book: InstrumentBook) -> tuple[Holding, ...]:
 def register_holding(
     book: InstrumentBook,
     raw_ticker: str,
-    quantity: float | None = None,
+    quantity: int,
 ) -> Result[None, str]:
     parsed = parse_holding(raw_ticker, quantity)
     if isinstance(parsed, Err):

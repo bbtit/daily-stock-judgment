@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import REAL, Column, Integer, MetaData, PrimaryKeyConstraint, Table, Text
+from sqlalchemy import Column, Integer, MetaData, PrimaryKeyConstraint, Table, Text
 
 metadata = MetaData()
 
@@ -16,7 +16,7 @@ holdings = Table(
     "holdings",
     metadata,
     Column("ticker", Text(collation="NOCASE"), primary_key=True),
-    Column("quantity", REAL),
+    Column("quantity", Integer, nullable=False),
 )
 
 judgments = Table(

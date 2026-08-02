@@ -172,8 +172,77 @@
 
       input[type="number"]::-webkit-inner-spin-button,
       input[type="number"]::-webkit-outer-spin-button {
-        opacity: 0.55;
-        filter: brightness(0.7);
+        appearance: none;
+        margin: 0;
+      }
+
+      input[type="number"] {
+        appearance: textfield;
+      }
+
+      .quantity-field {
+        position: relative;
+        display: inline-flex;
+        min-width: 9rem;
+        flex: 0 1 auto;
+      }
+
+      .quantity-field input {
+        width: 100%;
+        min-width: 9rem;
+        padding-right: 1.6rem;
+      }
+
+      .quantity-steppers {
+        position: absolute;
+        top: 0.35rem;
+        right: 0.3rem;
+        bottom: 0.35rem;
+        width: 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+      }
+
+      .quantity-steppers button {
+        width: 100%;
+        height: 50%;
+        min-height: 0;
+        border: 0;
+        border-radius: 3px;
+        background: transparent;
+        color: var(--icon);
+        opacity: 0.75;
+        padding: 0;
+        display: grid;
+        place-items: center;
+      }
+
+      .quantity-steppers button:hover {
+        color: var(--ink);
+        opacity: 1;
+        background: transparent;
+        border-color: transparent;
+      }
+
+      .quantity-steppers button:active {
+        transform: none;
+      }
+
+      .quantity-steppers button:focus-visible {
+        box-shadow: none;
+        color: var(--ink);
+        opacity: 1;
+      }
+
+      .quantity-steppers button svg {
+        width: 0.7rem;
+        height: 0.7rem;
+        stroke: currentColor;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
       }
 
       input:focus,
@@ -359,6 +428,15 @@
           min-width: 0;
           flex: 1 1 8rem;
         }
+
+        .quantity-field {
+          min-width: 0;
+          flex: 1 1 8rem;
+        }
+
+        .quantity-field input {
+          min-width: 0;
+        }
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -538,14 +616,29 @@
             required
             autocomplete="off"
           />
-          <input
-            type="number"
-            name="quantity"
-            aria-label="保有数量"
-            placeholder="数量（任意）"
-            step="100"
-            min="0"
-          />
+          <div class="quantity-field">
+            <input
+              type="number"
+              name="quantity"
+              aria-label="保有数量"
+              placeholder="数量"
+              step="1"
+              min="1"
+              required
+            />
+            <div class="quantity-steppers">
+              <button type="button" data-qty-delta="100" aria-label="数量を100増やす">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 14l6-6 6 6" />
+                </svg>
+              </button>
+              <button type="button" data-qty-delta="-100" aria-label="数量を100減らす">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 10l6 6 6-6" />
+                </svg>
+              </button>
+            </div>
+          </div>
           <button type="submit" aria-label="登録 / 更新">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M20 6 9 17l-5-5" />
@@ -558,9 +651,7 @@
           <li>
             <span>
               <span class="ticker">{{ item.ticker.value }}</span>
-              {% if item.quantity is not none %}
               <span class="meta">× {{ item.quantity }}</span>
-              {% endif %}
             </span>
             <form
               method="post"
@@ -586,5 +677,38 @@
         {% endif %}
       </section>
     </main>
+    <script>
+      (() => {
+        const field = document.querySelector(".quantity-field");
+        if (!field) return;
+        const input = field.querySelector('input[name="quantity"]');
+        const floor = 0;
+        const step = 100;
+
+        const adjust = (delta) => {
+          const raw = input.value.trim();
+          const cur = raw === "" ? 0 : Number(raw);
+          if (!Number.isFinite(cur)) return;
+          input.value = String(Math.max(floor, cur + delta));
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        };
+
+        field.querySelectorAll("[data-qty-delta]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            adjust(Number(btn.getAttribute("data-qty-delta")));
+          });
+        });
+
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowUp") {
+            event.preventDefault();
+            adjust(step);
+          } else if (event.key === "ArrowDown") {
+            event.preventDefault();
+            adjust(-step);
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

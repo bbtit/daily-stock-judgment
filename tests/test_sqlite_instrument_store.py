@@ -24,5 +24,5 @@ def test_ストアを開き直したときウォッチリストと保有が残�
 
     assert uc.list_watchlist(second) == (Ticker("7203.T"),)
     assert uc.list_holdings(second) == (
-        Holding(ticker=Ticker("6758.T"), quantity=5.0),
+        Holding(ticker=Ticker("6758.T"), quantity=5),
     )

@@ -38,7 +38,7 @@ def test_空のDBでcreate_appするとマイグレーション後にストア�
     uc.register_holding(store, "6758.T", quantity=3)
     assert uc.list_watchlist(store) == (Ticker("7203.T"),)
     assert uc.list_holdings(store) == (
-        Holding(ticker=Ticker("6758.T"), quantity=3.0),
+        Holding(ticker=Ticker("6758.T"), quantity=3),
     )
 
     from datetime import date

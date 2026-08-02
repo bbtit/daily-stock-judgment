@@ -141,14 +141,12 @@ def create_app(
         quantity: str = Form(""),
     ) -> RedirectResponse:
         raw = quantity.strip()
-        qty: float | None
         if raw == "":
-            qty = None
-        else:
-            try:
-                qty = float(raw)
-            except ValueError:
-                return _redirect_home("数量は数値で入力してください")
+            return _redirect_home("数量を入力してください")
+        try:
+            qty = int(raw)
+        except ValueError:
+            return _redirect_home("数量は整数で入力してください")
         result = uc.register_holding(book, ticker, quantity=qty)
         if isinstance(result, Err):
             return _redirect_home(result.error)

@@ -58,7 +58,55 @@ def test_保有を数量付きで登録したときレスポンスにティッ�
 
     assert response.status_code == 200
     assert 'value="8035.T"' in response.text
-    assert "× 100" in response.text or "× 100.0" in response.text
+    assert "× 100" in response.text
+
+
+def test_保有を小数の数量で登録しようとしたときエラーになる(
+    tmp_path: Path,
+) -> None:
+    client = TestClient(create_app(tmp_path / "app.db"))
+
+    response = client.post(
+        "/holdings",
+        data={"ticker": "8035.T", "quantity": "100.5"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "数量は整数で入力してください" in response.text
+    assert 'value="8035.T"' not in response.text
+
+
+def test_保有を数量なしで登録しようとしたときエラーになる(
+    tmp_path: Path,
+) -> None:
+    client = TestClient(create_app(tmp_path / "app.db"))
+
+    response = client.post(
+        "/holdings",
+        data={"ticker": "8035.T", "quantity": ""},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "数量を入力してください" in response.text
+    assert 'value="8035.T"' not in response.text
+
+
+def test_保有を数量0で登録しようとしたときエラーになる(
+    tmp_path: Path,
+) -> None:
+    client = TestClient(create_app(tmp_path / "app.db"))
+
+    response = client.post(
+        "/holdings",
+        data={"ticker": "8035.T", "quantity": "0"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "quantity must be positive" in response.text
+    assert 'value="8035.T"' not in response.text
 
 
 def test_保有を解除したときレスポンスからティッカーが消える(
