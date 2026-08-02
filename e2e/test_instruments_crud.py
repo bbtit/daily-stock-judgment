@@ -84,6 +84,24 @@ def test_保有を数量付きで登録したとき一覧にティッカーと�
     expect(holdings).to_contain_text("100")
 
 
+def test_保有を取得日と単価付きで登録したとき一覧に表示される(
+    page: Page, app_url: str
+) -> None:
+    page.goto(f"{app_url}/")
+
+    form = page.get_by_role("form", name="保有を登録")
+    form.get_by_label("保有のティッカー").fill("8035.T")
+    form.get_by_label("保有数量").fill("100")
+    form.get_by_label("1株あたり単価").fill("2500")
+    form.get_by_label("取得日").fill("2026-07-31")
+    form.get_by_role("button", name="登録 / 更新").click()
+
+    holdings = page.get_by_role("list", name="保有銘柄")
+    expect(holdings).to_contain_text("8035.T")
+    expect(holdings).to_contain_text("2500円")
+    expect(holdings).to_contain_text("2026-07-31")
+
+
 def test_保有を解除したとき空状態に戻る(page: Page, app_url: str) -> None:
     page.goto(f"{app_url}/")
 

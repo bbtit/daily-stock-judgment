@@ -61,6 +61,44 @@ def test_保有を数量付きで登録したときレスポンスにティッ�
     assert "× 100" in response.text
 
 
+def test_保有を取得日と単価付きで登録したときレスポンスに表示される(
+    tmp_path: Path,
+) -> None:
+    client = TestClient(create_app(tmp_path / "app.db"))
+
+    response = client.post(
+        "/holdings",
+        data={
+            "ticker": "8035.T",
+            "quantity": "100",
+            "purchase_date": "2026-07-31",
+            "unit_cost": "2500",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert 'value="8035.T"' in response.text
+    assert "2500円" in response.text
+    assert "2026-07-31 取得" in response.text
+
+
+def test_保有を不正な単価で登録しようとしたときエラーになる(
+    tmp_path: Path,
+) -> None:
+    client = TestClient(create_app(tmp_path / "app.db"))
+
+    response = client.post(
+        "/holdings",
+        data={"ticker": "8035.T", "quantity": "100", "unit_cost": "abc"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "単価は数値で入力してください" in response.text
+    assert 'value="8035.T"' not in response.text
+
+
 def test_保有を小数の数量で登録しようとしたときエラーになる(
     tmp_path: Path,
 ) -> None:

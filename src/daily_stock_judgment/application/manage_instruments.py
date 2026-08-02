@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+
 from daily_stock_judgment.application.ports import InstrumentBook
 from daily_stock_judgment.domain.holding import Holding, parse_holding
 from daily_stock_judgment.domain.result import Err, Ok, Result
@@ -49,8 +51,16 @@ def register_holding(
     book: InstrumentBook,
     raw_ticker: str,
     quantity: int,
+    *,
+    purchase_date: date | None = None,
+    unit_cost: float | None = None,
 ) -> Result[None, str]:
-    parsed = parse_holding(raw_ticker, quantity)
+    parsed = parse_holding(
+        raw_ticker,
+        quantity,
+        purchase_date=purchase_date,
+        unit_cost=unit_cost,
+    )
     if isinstance(parsed, Err):
         return parsed
     book.upsert_holding(parsed.value)

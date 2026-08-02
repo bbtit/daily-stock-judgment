@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 from daily_stock_judgment.application import manage_instruments as uc
@@ -25,4 +26,30 @@ def test_ストアを開き直したときウォッチリストと保有が残�
     assert uc.list_watchlist(second) == (Ticker("7203.T"),)
     assert uc.list_holdings(second) == (
         Holding(ticker=Ticker("6758.T"), quantity=5),
+    )
+
+
+def test_ストアを開き直したとき取得日と単価も残っている(
+    tmp_path: Path,
+) -> None:
+    db_path = tmp_path / "app.db"
+    upgrade_to_head(db_path)
+    first = SqliteInstrumentStore(db_path)
+    uc.register_holding(
+        first,
+        "7203.T",
+        quantity=100,
+        purchase_date=date(2026, 7, 31),
+        unit_cost=2500.5,
+    )
+
+    second = SqliteInstrumentStore(db_path)
+
+    assert uc.list_holdings(second) == (
+        Holding(
+            ticker=Ticker("7203.T"),
+            quantity=100,
+            purchase_date=date(2026, 7, 31),
+            unit_cost=2500.5,
+        ),
     )

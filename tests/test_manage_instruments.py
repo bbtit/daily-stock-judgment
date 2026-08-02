@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+
 from daily_stock_judgment.application import manage_instruments as uc
 from daily_stock_judgment.domain.holding import Holding
 from daily_stock_judgment.domain.result import Err, Ok
@@ -90,3 +92,38 @@ def test_同じ銘柄の保有を再登録したとき数量が上書きされ�
     assert uc.list_holdings(book) == (
         Holding(ticker=Ticker("7203.T"), quantity=20),
     )
+
+
+def test_保有を取得日と単価付きで登録したとき一覧にそれらが残る() -> None:
+    book = InMemoryInstrumentStore()
+
+    result = uc.register_holding(
+        book,
+        "7203.T",
+        quantity=100,
+        purchase_date=date(2026, 7, 31),
+        unit_cost=2500.5,
+    )
+
+    assert isinstance(result, Ok)
+    assert uc.list_holdings(book) == (
+        Holding(
+            ticker=Ticker("7203.T"),
+            quantity=100,
+            purchase_date=date(2026, 7, 31),
+            unit_cost=2500.5,
+        ),
+    )
+
+
+def test_単価が0以下で保有を登録しようとしたときエラーになる() -> None:
+    book = InMemoryInstrumentStore()
+
+    for cost in (0.0, -1.0):
+        result = uc.register_holding(
+            book, "7203.T", quantity=100, unit_cost=cost
+        )
+        assert isinstance(result, Err)
+        assert "unit cost" in result.error
+
+    assert uc.list_holdings(book) == ()

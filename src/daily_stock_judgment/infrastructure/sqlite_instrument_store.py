@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from datetime import date
 from pathlib import Path
 
 from daily_stock_judgment.domain.holding import Holding
@@ -52,21 +53,49 @@ class SqliteInstrumentStore:
     def list_holdings(self) -> tuple[Holding, ...]:
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT ticker, quantity FROM holdings ORDER BY ticker"
+                "SELECT ticker, quantity, purchase_date, unit_cost "
+                "FROM holdings ORDER BY ticker"
             ).fetchall()
         return tuple(
-            Holding(ticker=Ticker(row["ticker"]), quantity=int(row["quantity"]))
+            Holding(
+                ticker=Ticker(row["ticker"]),
+                quantity=int(row["quantity"]),
+                purchase_date=(
+                    date.fromisoformat(row["purchase_date"])
+                    if row["purchase_date"]
+                    else None
+                ),
+                unit_cost=(
+                    float(row["unit_cost"])
+                    if row["unit_cost"] is not None
+                    else None
+                ),
+            )
             for row in rows
         )
 
     def upsert_holding(self, holding: Holding) -> None:
+        purchase_date = (
+            holding.purchase_date.isoformat()
+            if holding.purchase_date is not None
+            else None
+        )
         with self._connect() as conn:
             conn.execute(
                 """
-                INSERT INTO holdings (ticker, quantity) VALUES (?, ?)
-                ON CONFLICT(ticker) DO UPDATE SET quantity = excluded.quantity
+                INSERT INTO holdings (ticker, quantity, purchase_date, unit_cost)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(ticker) DO UPDATE SET
+                    quantity = excluded.quantity,
+                    purchase_date = excluded.purchase_date,
+                    unit_cost = excluded.unit_cost
                 """,
-                (holding.ticker.value, holding.quantity),
+                (
+                    holding.ticker.value,
+                    holding.quantity,
+                    purchase_date,
+                    holding.unit_cost,
+                ),
             )
 
     def remove_holding(self, ticker: Ticker) -> None:
