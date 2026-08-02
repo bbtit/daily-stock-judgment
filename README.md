@@ -57,6 +57,10 @@ pnpm dlx @lhci/cli autorun
 
 実装方針（DDD / クリーンアーキテクチャ / イミュータブル）は [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を参照。
 
+## UI
+
+見た目の原則（許可色・層・ボタン縁取り）は [docs/UI.md](docs/UI.md) を参照。
+
 ## ディレクトリ構成
 
 依存は外側 → 内側（`domain`）へ向ける。ドメインの値はイミュータブル（frozen dataclass）。
@@ -65,6 +69,9 @@ pnpm dlx @lhci/cli autorun
 .
 ├── CONTEXT.md                 # ドメイン用語
 ├── README.md
+├── docs/
+│   ├── ARCHITECTURE.md        # 実装方針
+│   └── UI.md                  # UI 見た目の原則
 ├── pyproject.toml
 ├── uv.lock
 ├── .python-version

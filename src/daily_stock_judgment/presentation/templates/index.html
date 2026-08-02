@@ -7,20 +7,11 @@
     <title>日次売買判断</title>
     <style>
       :root {
-        --bg-deep: #0c0e12;
-        --bg: #12151b;
-        --surface: #181c24;
-        --surface-raised: #1e2430;
-        --surface-hover: #252b38;
-        --ink: #f0f2f6;
-        --ink-soft: #d0d5de;
-        --muted: #a8b0c0;
-        --muted-dim: #7a8294;
-        --accent: #d8dde8;
-        --accent-ink: #d0d5de;
-        --danger: #f08a8a;
-        --danger-soft: rgba(240, 138, 138, 0.14);
-        --focus: rgba(200, 210, 230, 0.55);
+        --bg: #141414;
+        --surface: #181818;
+        --ink: #f0f0f0;
+        --icon: #818181;
+        --border: #292929;
         --radius: 14px;
         --radius-sm: 10px;
         --radius-pill: 999px;
@@ -39,11 +30,7 @@
         font-size: 1.0625rem;
         line-height: 1.65;
         color: var(--ink);
-        background:
-          radial-gradient(ellipse 80% 50% at 15% -10%, #1a2030 0%, transparent 55%),
-          radial-gradient(ellipse 60% 40% at 95% 5%, #161820 0%, transparent 50%),
-          linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
-        background-attachment: fixed;
+        background: var(--bg);
         min-height: 100vh;
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
@@ -88,15 +75,15 @@
       }
 
       .lede {
-        color: var(--muted);
+        color: var(--icon);
         margin: 0;
         font-size: 1rem;
         line-height: 1.7;
       }
 
       .error {
-        color: var(--danger);
-        background: var(--danger-soft);
+        color: var(--ink);
+        background: var(--surface);
         border-radius: var(--radius-sm);
         padding: 0.85rem 1rem;
         margin: 0 0 1.25rem;
@@ -130,7 +117,7 @@
         font-weight: 700;
         letter-spacing: 0.02em;
         line-height: 1.4;
-        color: var(--ink-soft);
+        color: var(--ink);
         margin: 0 0 1rem;
       }
 
@@ -157,7 +144,7 @@
         display: flex;
         flex-direction: column;
         gap: 0.4rem;
-        color: var(--ink-soft);
+        color: var(--ink);
         font-size: 0.95rem;
         line-height: 1.5;
       }
@@ -174,30 +161,24 @@
         min-width: 9rem;
         min-height: 2.75rem;
         color: var(--ink);
-        background: var(--surface-raised);
-        transition: background 0.15s ease, box-shadow 0.15s ease;
+        background: var(--bg);
+        transition: box-shadow 0.15s ease;
       }
 
       input::placeholder {
-        color: var(--muted-dim);
-      }
-
-      input:hover,
-      select:hover {
-        background: var(--surface-hover);
+        color: var(--icon);
       }
 
       input:focus,
       select:focus {
         outline: none;
-        box-shadow: 0 0 0 2px var(--focus);
-        background: var(--surface-hover);
+        box-shadow: 0 0 0 2px var(--icon);
       }
 
       select {
         appearance: none;
-        background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
-          linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+        background-image: linear-gradient(45deg, transparent 50%, var(--icon) 50%),
+          linear-gradient(135deg, var(--icon) 50%, transparent 50%);
         background-position:
           calc(100% - 16px) calc(50% - 2px),
           calc(100% - 11px) calc(50% - 2px);
@@ -207,12 +188,12 @@
       }
 
       select option {
-        background: var(--surface-raised);
+        background: var(--surface);
         color: var(--ink);
       }
 
       button {
-        border: 0;
+        border: 1px solid var(--border);
         border-radius: var(--radius-pill);
         padding: 0;
         width: 1.85rem;
@@ -221,11 +202,10 @@
         align-items: center;
         justify-content: center;
         font: inherit;
-        background: var(--accent);
-        color: #0c0e12;
+        background: transparent;
+        color: var(--icon);
         cursor: pointer;
-        transition: transform 0.12s ease, filter 0.15s ease, background 0.15s ease,
-          color 0.15s ease;
+        transition: transform 0.12s ease, background 0.15s ease, color 0.15s ease;
       }
 
       button svg {
@@ -245,7 +225,8 @@
       }
 
       button:hover {
-        filter: brightness(1.08);
+        color: var(--ink);
+        background: var(--bg);
       }
 
       button:active {
@@ -254,18 +235,18 @@
 
       button:focus-visible {
         outline: none;
-        box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus);
+        box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--icon);
       }
 
       button.secondary {
+        border: 0;
         background: transparent;
-        color: var(--muted);
+        color: var(--icon);
       }
 
       button.secondary:hover {
-        background: var(--surface);
-        color: var(--danger);
-        filter: none;
+        background: transparent;
+        color: var(--ink);
       }
 
       ul {
@@ -283,13 +264,8 @@
         align-items: center;
         gap: 0.75rem;
         padding: 0.85rem 1rem;
-        background: var(--surface-raised);
+        background: var(--bg);
         border-radius: var(--radius-sm);
-        transition: background 0.15s ease;
-      }
-
-      li:hover {
-        background: var(--surface-hover);
       }
 
       li form.row,
@@ -298,14 +274,14 @@
       }
 
       .empty {
-        color: var(--muted);
+        color: var(--icon);
         margin: 0;
         font-size: 1rem;
         line-height: 1.65;
       }
 
       .meta {
-        color: var(--muted);
+        color: var(--icon);
         font-size: 0.95rem;
         line-height: 1.6;
       }
@@ -325,7 +301,7 @@
       .date-chip {
         display: inline-block;
         color: var(--ink);
-        background: var(--surface-raised);
+        background: var(--bg);
         border-radius: var(--radius-pill);
         padding: 0.35rem 0.75rem;
         font-size: 0.95rem;
@@ -350,13 +326,13 @@
       }
 
       .judgment-summary {
-        color: var(--accent-ink);
+        color: var(--ink);
         font-size: 1rem;
         line-height: 1.55;
       }
 
       .failure-kind {
-        color: var(--danger);
+        color: var(--icon);
         font-size: 1rem;
         line-height: 1.55;
       }
