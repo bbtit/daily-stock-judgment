@@ -26,7 +26,7 @@ def upgrade() -> None:
     op.create_table(
         "holdings",
         sa.Column("ticker", sa.Text(collation="NOCASE"), primary_key=True),
-        sa.Column("quantity", sa.Float(), nullable=True),
+        sa.Column("quantity", sa.REAL(), nullable=True),
     )
     op.create_table(
         "judgments",

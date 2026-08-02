@@ -20,8 +20,11 @@ SQLite のデフォルト保存先: `data/app.db`（パスは `DSJ_DB_PATH` で�
 uv run alembic upgrade head
 uv run alembic downgrade -1
 uv run alembic revision --autogenerate -m "describe change"  # 必ず人手レビュー
-# 既存 DB を初めて載せるとき（データ保持）: .schema を確認 → 孤児 schema_migrations があれば DROP →
-# DSJ_DB_PATH=... uv run alembic stamp head
+# 既存 DB を初めて載せるとき（データ保持）:
+# 1. .schema を baseline（4テーブル）と目視突合。不一致なら stamp せず直す
+# 2. 孤児 schema_migrations があれば DROP
+# 3. DSJ_DB_PATH=... uv run alembic stamp head
+# 以降の変更: infrastructure の MetaData を更新 → autogenerate 下書きを人手レビュー → 次回起動で upgrade
 ```
 
 相場は既定で yfinance。判断 LLM は `DSJ_AGENT_CLI` で指定したローカルエージェント CLI（stdin にプロンプト、stdout に JSON）。未設定時はデモ LLM。

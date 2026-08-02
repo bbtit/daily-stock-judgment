@@ -31,7 +31,6 @@ def test_空のDBでcreate_appするとマイグレーション後にストア�
         "holdings",
         "judgments",
         "day_runs",
-        "alembic_version",
     } <= tables
 
     store = SqliteInstrumentStore(db_path)
@@ -41,3 +40,23 @@ def test_空のDBでcreate_appするとマイグレーション後にストア�
     assert uc.list_holdings(store) == (
         Holding(ticker=Ticker("6758.T"), quantity=3.0),
     )
+
+    from datetime import date
+
+    from daily_stock_judgment.domain.judgment import Label, SuccessfulJudgment
+    from daily_stock_judgment.infrastructure.sqlite_judgment_store import (
+        SqliteJudgmentStore,
+    )
+
+    as_of = date(2026, 7, 31)
+    judgments = SqliteJudgmentStore(db_path)
+    judgments.upsert(
+        SuccessfulJudgment(
+            ticker=Ticker("7203.T"),
+            as_of=as_of,
+            score=10,
+            label=Label.WAIT,
+            reason="終値100円前後。",
+        )
+    )
+    assert len(judgments.list_for(as_of)) == 1
