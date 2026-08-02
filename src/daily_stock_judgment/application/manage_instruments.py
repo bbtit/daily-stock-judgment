@@ -52,8 +52,8 @@ def register_holding(
     raw_ticker: str,
     quantity: int,
     *,
-    purchase_date: date | None = None,
-    unit_cost: float | None = None,
+    purchase_date: date,
+    unit_cost: float,
 ) -> Result[None, str]:
     parsed = parse_holding(
         raw_ticker,

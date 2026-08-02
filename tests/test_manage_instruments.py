@@ -10,6 +10,9 @@ from daily_stock_judgment.infrastructure.memory_instrument_store import (
     InMemoryInstrumentStore,
 )
 
+_PURCHASE_DATE = date(2026, 7, 31)
+_UNIT_COST = 2500.0
+
 
 def test_ウォッチリストに追加したとき一覧にそのティッカーが含まれる() -> None:
     book = InMemoryInstrumentStore()
@@ -53,12 +56,34 @@ def test_日本株以外のティッカーを追加しようとしたときエ�
 def test_保有を登録したとき一覧にティッカーと数量が並ぶ() -> None:
     book = InMemoryInstrumentStore()
 
-    uc.register_holding(book, "7203.T", quantity=100)
-    uc.register_holding(book, "6758.T", quantity=200)
+    uc.register_holding(
+        book,
+        "7203.T",
+        quantity=100,
+        purchase_date=_PURCHASE_DATE,
+        unit_cost=_UNIT_COST,
+    )
+    uc.register_holding(
+        book,
+        "6758.T",
+        quantity=200,
+        purchase_date=_PURCHASE_DATE,
+        unit_cost=3000.0,
+    )
 
     assert uc.list_holdings(book) == (
-        Holding(ticker=Ticker("6758.T"), quantity=200),
-        Holding(ticker=Ticker("7203.T"), quantity=100),
+        Holding(
+            ticker=Ticker("6758.T"),
+            quantity=200,
+            purchase_date=_PURCHASE_DATE,
+            unit_cost=3000.0,
+        ),
+        Holding(
+            ticker=Ticker("7203.T"),
+            quantity=100,
+            purchase_date=_PURCHASE_DATE,
+            unit_cost=_UNIT_COST,
+        ),
     )
 
 
@@ -66,7 +91,13 @@ def test_数量が0以下で保有を登録しようとしたときエラーに�
     book = InMemoryInstrumentStore()
 
     for qty in (0, -1):
-        result = uc.register_holding(book, "7203.T", quantity=qty)
+        result = uc.register_holding(
+            book,
+            "7203.T",
+            quantity=qty,
+            purchase_date=_PURCHASE_DATE,
+            unit_cost=_UNIT_COST,
+        )
         assert isinstance(result, Err)
         assert "quantity" in result.error
 
@@ -75,7 +106,13 @@ def test_数量が0以下で保有を登録しようとしたときエラーに�
 
 def test_保有を解除したとき一覧が空になる() -> None:
     book = InMemoryInstrumentStore()
-    uc.register_holding(book, "7203.T", quantity=10)
+    uc.register_holding(
+        book,
+        "7203.T",
+        quantity=10,
+        purchase_date=_PURCHASE_DATE,
+        unit_cost=_UNIT_COST,
+    )
 
     result = uc.unregister_holding(book, "7203.T")
 
@@ -85,12 +122,29 @@ def test_保有を解除したとき一覧が空になる() -> None:
 
 def test_同じ銘柄の保有を再登録したとき数量が上書きされる() -> None:
     book = InMemoryInstrumentStore()
-    uc.register_holding(book, "7203.T", quantity=10)
+    uc.register_holding(
+        book,
+        "7203.T",
+        quantity=10,
+        purchase_date=_PURCHASE_DATE,
+        unit_cost=_UNIT_COST,
+    )
 
-    uc.register_holding(book, "7203.T", quantity=20)
+    uc.register_holding(
+        book,
+        "7203.T",
+        quantity=20,
+        purchase_date=date(2026, 8, 1),
+        unit_cost=2600.0,
+    )
 
     assert uc.list_holdings(book) == (
-        Holding(ticker=Ticker("7203.T"), quantity=20),
+        Holding(
+            ticker=Ticker("7203.T"),
+            quantity=20,
+            purchase_date=date(2026, 8, 1),
+            unit_cost=2600.0,
+        ),
     )
 
 
@@ -121,7 +175,11 @@ def test_単価が0以下で保有を登録しようとしたときエラーに�
 
     for cost in (0.0, -1.0):
         result = uc.register_holding(
-            book, "7203.T", quantity=100, unit_cost=cost
+            book,
+            "7203.T",
+            quantity=100,
+            purchase_date=_PURCHASE_DATE,
+            unit_cost=cost,
         )
         assert isinstance(result, Err)
         assert "unit cost" in result.error

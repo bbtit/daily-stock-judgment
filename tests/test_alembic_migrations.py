@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from datetime import date
 from pathlib import Path
 
 from daily_stock_judgment.application import manage_instruments as uc
@@ -35,13 +36,22 @@ def test_空のDBでcreate_appするとマイグレーション後にストア�
 
     store = SqliteInstrumentStore(db_path)
     uc.add_to_watchlist(store, "7203.T")
-    uc.register_holding(store, "6758.T", quantity=3)
+    uc.register_holding(
+        store,
+        "6758.T",
+        quantity=3,
+        purchase_date=date(2026, 7, 31),
+        unit_cost=2500.0,
+    )
     assert uc.list_watchlist(store) == (Ticker("7203.T"),)
     assert uc.list_holdings(store) == (
-        Holding(ticker=Ticker("6758.T"), quantity=3),
+        Holding(
+            ticker=Ticker("6758.T"),
+            quantity=3,
+            purchase_date=date(2026, 7, 31),
+            unit_cost=2500.0,
+        ),
     )
-
-    from datetime import date
 
     from daily_stock_judgment.domain.judgment import Label, SuccessfulJudgment
     from daily_stock_judgment.infrastructure.sqlite_judgment_store import (

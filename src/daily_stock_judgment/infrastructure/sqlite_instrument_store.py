@@ -60,26 +60,13 @@ class SqliteInstrumentStore:
             Holding(
                 ticker=Ticker(row["ticker"]),
                 quantity=int(row["quantity"]),
-                purchase_date=(
-                    date.fromisoformat(row["purchase_date"])
-                    if row["purchase_date"]
-                    else None
-                ),
-                unit_cost=(
-                    float(row["unit_cost"])
-                    if row["unit_cost"] is not None
-                    else None
-                ),
+                purchase_date=date.fromisoformat(row["purchase_date"]),
+                unit_cost=float(row["unit_cost"]),
             )
             for row in rows
         )
 
     def upsert_holding(self, holding: Holding) -> None:
-        purchase_date = (
-            holding.purchase_date.isoformat()
-            if holding.purchase_date is not None
-            else None
-        )
         with self._connect() as conn:
             conn.execute(
                 """
@@ -93,7 +80,7 @@ class SqliteInstrumentStore:
                 (
                     holding.ticker.value,
                     holding.quantity,
-                    purchase_date,
+                    holding.purchase_date.isoformat(),
                     holding.unit_cost,
                 ),
             )

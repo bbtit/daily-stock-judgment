@@ -151,20 +151,20 @@ def create_app(
             return _redirect_home("数量は整数で入力してください")
 
         raw_date = purchase_date.strip()
-        parsed_date: date | None = None
-        if raw_date != "":
-            try:
-                parsed_date = date.fromisoformat(raw_date)
-            except ValueError:
-                return _redirect_home("取得日は日付で入力してください")
+        if raw_date == "":
+            return _redirect_home("取得日を入力してください")
+        try:
+            parsed_date = date.fromisoformat(raw_date)
+        except ValueError:
+            return _redirect_home("取得日は日付で入力してください")
 
         raw_cost = unit_cost.strip()
-        parsed_cost: float | None = None
-        if raw_cost != "":
-            try:
-                parsed_cost = float(raw_cost)
-            except ValueError:
-                return _redirect_home("単価は数値で入力してください")
+        if raw_cost == "":
+            return _redirect_home("単価を入力してください")
+        try:
+            parsed_cost = float(raw_cost)
+        except ValueError:
+            return _redirect_home("単価は数値で入力してください")
 
         result = uc.register_holding(
             book,

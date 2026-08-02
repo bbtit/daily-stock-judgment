@@ -9,27 +9,27 @@ from daily_stock_judgment.domain.ticker import Ticker, parse_ticker
 
 @dataclass(frozen=True, order=True)
 class Holding:
-    """保有 — ticker, quantity, and optional purchase record."""
+    """保有 — ticker, quantity, purchase date, and unit cost."""
 
     ticker: Ticker
     quantity: int
-    purchase_date: date | None = None
-    unit_cost: float | None = None
+    purchase_date: date
+    unit_cost: float
 
 
 def parse_holding(
     raw_ticker: str,
     quantity: int,
     *,
-    purchase_date: date | None = None,
-    unit_cost: float | None = None,
+    purchase_date: date,
+    unit_cost: float,
 ) -> Result[Holding, str]:
     parsed = parse_ticker(raw_ticker)
     if isinstance(parsed, Err):
         return parsed
     if quantity <= 0:
         return Err("quantity must be positive")
-    if unit_cost is not None and unit_cost <= 0:
+    if unit_cost <= 0:
         return Err("unit cost must be positive")
     return Ok(
         Holding(

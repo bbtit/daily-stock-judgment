@@ -6,6 +6,13 @@ from fastapi.testclient import TestClient
 
 from daily_stock_judgment.composition import create_app
 
+_HOLDING = {
+    "ticker": "8035.T",
+    "quantity": "100",
+    "purchase_date": "2026-07-31",
+    "unit_cost": "2500",
+}
+
 
 def test_favicon_icoを返す(tmp_path: Path) -> None:
     client = TestClient(create_app(tmp_path / "app.db"))
@@ -45,40 +52,20 @@ def test_ウォッチリストから削除したときレスポンスからテ�
     assert 'value="9984.T"' not in response.text
 
 
-def test_保有を数量付きで登録したときレスポンスにティッカーと数量が含まれる(
+def test_保有を登録したときレスポンスにティッカー数量取得日単価が含まれる(
     tmp_path: Path,
 ) -> None:
     client = TestClient(create_app(tmp_path / "app.db"))
 
     response = client.post(
         "/holdings",
-        data={"ticker": "8035.T", "quantity": "100"},
+        data=_HOLDING,
         follow_redirects=True,
     )
 
     assert response.status_code == 200
     assert 'value="8035.T"' in response.text
     assert "× 100" in response.text
-
-
-def test_保有を取得日と単価付きで登録したときレスポンスに表示される(
-    tmp_path: Path,
-) -> None:
-    client = TestClient(create_app(tmp_path / "app.db"))
-
-    response = client.post(
-        "/holdings",
-        data={
-            "ticker": "8035.T",
-            "quantity": "100",
-            "purchase_date": "2026-07-31",
-            "unit_cost": "2500",
-        },
-        follow_redirects=True,
-    )
-
-    assert response.status_code == 200
-    assert 'value="8035.T"' in response.text
     assert "2500円" in response.text
     assert "2026-07-31 取得" in response.text
 
@@ -90,12 +77,44 @@ def test_保有を不正な単価で登録しようとしたときエラーに�
 
     response = client.post(
         "/holdings",
-        data={"ticker": "8035.T", "quantity": "100", "unit_cost": "abc"},
+        data={**_HOLDING, "unit_cost": "abc"},
         follow_redirects=True,
     )
 
     assert response.status_code == 200
     assert "単価は数値で入力してください" in response.text
+    assert 'value="8035.T"' not in response.text
+
+
+def test_保有を単価なしで登録しようとしたときエラーになる(
+    tmp_path: Path,
+) -> None:
+    client = TestClient(create_app(tmp_path / "app.db"))
+
+    response = client.post(
+        "/holdings",
+        data={**_HOLDING, "unit_cost": ""},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "単価を入力してください" in response.text
+    assert 'value="8035.T"' not in response.text
+
+
+def test_保有を取得日なしで登録しようとしたときエラーになる(
+    tmp_path: Path,
+) -> None:
+    client = TestClient(create_app(tmp_path / "app.db"))
+
+    response = client.post(
+        "/holdings",
+        data={**_HOLDING, "purchase_date": ""},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "取得日を入力してください" in response.text
     assert 'value="8035.T"' not in response.text
 
 
@@ -106,7 +125,7 @@ def test_保有を小数の数量で登録しようとしたときエラーに�
 
     response = client.post(
         "/holdings",
-        data={"ticker": "8035.T", "quantity": "100.5"},
+        data={**_HOLDING, "quantity": "100.5"},
         follow_redirects=True,
     )
 
@@ -122,7 +141,7 @@ def test_保有を数量なしで登録しようとしたときエラーにな�
 
     response = client.post(
         "/holdings",
-        data={"ticker": "8035.T", "quantity": ""},
+        data={**_HOLDING, "quantity": ""},
         follow_redirects=True,
     )
 
@@ -138,7 +157,7 @@ def test_保有を数量0で登録しようとしたときエラーになる(
 
     response = client.post(
         "/holdings",
-        data={"ticker": "8035.T", "quantity": "0"},
+        data={**_HOLDING, "quantity": "0"},
         follow_redirects=True,
     )
 
@@ -153,7 +172,7 @@ def test_保有を解除したときレスポンスからティッカーが消�
     client = TestClient(create_app(tmp_path / "app.db"))
     client.post(
         "/holdings",
-        data={"ticker": "8035.T", "quantity": "100"},
+        data=_HOLDING,
         follow_redirects=True,
     )
 

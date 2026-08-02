@@ -19,12 +19,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "holdings", sa.Column("purchase_date", sa.Text(), nullable=True)
-    )
-    op.add_column(
-        "holdings", sa.Column("unit_cost", sa.Float(), nullable=True)
-    )
+    op.execute(sa.text("DELETE FROM holdings"))
+    with op.batch_alter_table("holdings") as batch:
+        batch.add_column(
+            sa.Column("purchase_date", sa.Text(), nullable=False)
+        )
+        batch.add_column(sa.Column("unit_cost", sa.Float(), nullable=False))
 
 
 def downgrade() -> None:

@@ -25,8 +25,8 @@ holdings = Table(
     metadata,
     Column("ticker", Text(collation="NOCASE"), primary_key=True),
     Column("quantity", Integer, nullable=False),
-    Column("purchase_date", Text, nullable=True),
-    Column("unit_cost", Float, nullable=True),
+    Column("purchase_date", Text, nullable=False),
+    Column("unit_cost", Float, nullable=False),
 )
 
 judgments = Table(
