@@ -374,18 +374,15 @@
         margin: 0;
       }
 
-      .date-chip {
-        display: inline-block;
-        color: var(--ink);
-        background: var(--bg);
-        border-radius: var(--radius-pill);
-        padding: 0.35rem 0.75rem;
+      .date-meta {
+        color: var(--icon);
         font-size: 0.95rem;
         font-weight: 400;
         letter-spacing: 0.02em;
         line-height: 1.4;
         margin: 0;
         flex-shrink: 0;
+        font-variant-numeric: tabular-nums;
       }
 
       .judgment-row {
@@ -462,7 +459,7 @@
       <section aria-labelledby="today-judgments-heading">
         <div class="section-head">
           <h2 id="today-judgments-heading">今日の判断</h2>
-          <p class="date-chip">判断日: {{ as_of }}</p>
+          <p class="date-meta">判断日: {{ as_of }}</p>
         </div>
         <form
           class="row"
